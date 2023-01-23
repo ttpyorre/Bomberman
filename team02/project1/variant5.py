@@ -1,3 +1,4 @@
+#!/urs/bin/env Python3
 # This is necessary to find the main code
 import sys
 sys.path.insert(0, '../../bomberman')
@@ -10,7 +11,7 @@ from monsters.stupid_monster import StupidMonster
 from monsters.selfpreserving_monster import SelfPreservingMonster
 
 # TODO This is your code!
-sys.path.insert(1, '../teamNN')
+sys.path.insert(1, '../team02')
 from testcharacter import TestCharacter
 
 # Create the game

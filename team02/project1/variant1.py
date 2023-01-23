@@ -1,3 +1,4 @@
+#!/usr/bin/env Python3
 # This is necessary to find the main code
 import sys
 sys.path.insert(0, '../../bomberman')
@@ -7,7 +8,7 @@ sys.path.insert(1, '..')
 from game import Game
 
 # TODO This is your code!
-sys.path.insert(1, '../teamNN')
+sys.path.insert(1, '../team02')
 
 # Uncomment this if you want the empty test character
 #from testcharacter import TestCharacter
