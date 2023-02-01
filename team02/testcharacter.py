@@ -8,5 +8,5 @@ from colorama import Fore, Back
 class TestCharacter(CharacterEntity):
 
     def do(self, wrld):
-        # Your code here
+        
         pass

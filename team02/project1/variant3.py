@@ -10,8 +10,15 @@ from game import Game
 from monsters.selfpreserving_monster import SelfPreservingMonster
 
 # TODO This is your code!
+
+
+    
+
+
+
 sys.path.insert(1, '../team02')
 from testcharacter import TestCharacter
+from minimax_character import MinimaxCharacter
 
 # Create the game
 random.seed(123) # TODO Change this if you want different random choices
