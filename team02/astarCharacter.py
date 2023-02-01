@@ -42,9 +42,18 @@ class AstarCharacter(CharacterEntity):
 
     @staticmethod
     def heuristics(start, goal):
+        '''
+        :param start [int, int]
+        :param goal  [int, int]
+        :return euclidean distance.
+        '''
         return math.sqrt(pow(abs(start[0] - goal[0]), 2) + pow(abs(start[1] - goal[1]), 2))
 
     def astar(self, wrld):
+        '''
+        :param wrld  [SensedWorld] world object
+        :return path [[(int, int)]] fastest path from current to goal
+        '''
         start = (self.x, self.y)
         goal = wrld.exitcell
 
@@ -69,7 +78,7 @@ class AstarCharacter(CharacterEntity):
 
             nextNodes = AstarCharacter.neighbors_of_8(wrld, current[0], current[1])
             for nextNode in nextNodes:
-                new_cost = cost[current] + cost_to_visit_node # cost is length of nodes + 
+                new_cost = cost[current] + cost_to_visit_node
                 if nextNode not in cost or new_cost < cost[nextNode]:
                     cost[nextNode] = new_cost
                     priority = new_cost + AstarCharacter.heuristics(nextNode, goal)
