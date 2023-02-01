@@ -23,8 +23,8 @@ g = Game.fromfile('map.txt')
 
 # Uncomment this if you want the test character
 
-g.add_character(AstarCharacter("me", # name
-                              "C",  # avatar
+g.add_character(AstarCharacter("astar", # name
+                              "A",  # avatar
                               0, 0  # position
 ))
 
@@ -39,7 +39,7 @@ g.add_character(InteractiveCharacter("me", # name
 # Run!
 
 # Use this if you want to press ENTER to continue at each step
-#g.go(0)
+g.go(0)
 
 # Use this if you want to proceed automatically
-g.go(1)
+#g.go(1)

@@ -15,12 +15,9 @@ class AstarCharacter(CharacterEntity):
     def do(self, wrld):
         # Astar gives us a path of nodes that we visit one by one
         path = self.astar(wrld)
-
         while path:
             walk = path.pop()
             self.move(walk[0] - self.x, walk[1] - self.y)
-
-
 
     @staticmethod
     def neighbors_of_8(wrld, x, y):
@@ -57,6 +54,7 @@ class AstarCharacter(CharacterEntity):
         
         cameFrom = {}
         cost = {}
+        cost_to_visit_node = 1
         cameFrom[start] = None
         cost[start] = 0
 
@@ -66,18 +64,19 @@ class AstarCharacter(CharacterEntity):
         while not queue.empty():
             current = queue.get()
 
-            if goal == current:
+            if goal == current: # found goal
                 break
 
             nextNodes = AstarCharacter.neighbors_of_8(wrld, current[0], current[1])
             for nextNode in nextNodes:
-                new_cost = cost[current]
+                new_cost = cost[current] + cost_to_visit_node # cost is length of nodes + 
                 if nextNode not in cost or new_cost < cost[nextNode]:
                     cost[nextNode] = new_cost
                     priority = new_cost + AstarCharacter.heuristics(nextNode, goal)
                     queue.put(nextNode, priority)
                     cameFrom[nextNode] = current
-
+        
+        # We make our path
         while current != start:
             path.insert(0, current)
             current = cameFrom[current]
