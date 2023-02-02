@@ -11,7 +11,7 @@ from monsters.selfpreserving_monster import SelfPreservingMonster
 
 # TODO This is your code!
 sys.path.insert(1, '../team02')
-from testcharacter import TestCharacter
+from aggCharacter import AggCharacter
 from interactivecharacter import InteractiveCharacter
 
 # Create the game
@@ -24,10 +24,10 @@ g.add_monster(SelfPreservingMonster("aggressive", # name
 ))
 
 # TODO Add your character
-g.add_character(InteractiveCharacter("me", # name
-                                     "C",  # avatar
-                                     0, 0  # position
+g.add_character(AggCharacter("me", # name
+                             "C",  # avatar
+                             0, 0  # position
 ))
 
 # Run!
-g.go(1)
+g.go()
