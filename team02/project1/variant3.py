@@ -33,4 +33,4 @@ g.add_character(MinimaxCharacter("me", # name
 ))
 
 # Run!
-g.go()
+g.go(1)

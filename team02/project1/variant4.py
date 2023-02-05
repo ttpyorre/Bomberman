@@ -8,6 +8,7 @@ sys.path.insert(1, '..')
 import random
 from game import Game
 from monsters.selfpreserving_monster import SelfPreservingMonster
+from minimax_character import MinimaxCharacter
 
 # TODO This is your code!
 sys.path.insert(1, '../team02')
@@ -23,7 +24,7 @@ g.add_monster(SelfPreservingMonster("aggressive", # name
 ))
 
 # TODO Add your character
-g.add_character(TestCharacter("me", # name
+g.add_character(MinimaxCharacter("me", # name
                               "C",  # avatar
                               0, 0  # position
 ))
