@@ -20,10 +20,8 @@ class MinimaxCharacter(CharacterEntity):
         # if self.terminal_state(world):
         #     print("Hell yes the world is ending")
         # pass
-
-        print("Util")
-        print(self.utility(world))
-        self.move(1, 0)
+        print(self.minimax_decision(world))
+        
         # self.result(world, (1, 1))
         # print(self.x, self.y)
         
@@ -39,11 +37,13 @@ class MinimaxCharacter(CharacterEntity):
         
 
     def minimax_decision(self, world):
-        actions = actions(world)
+        
+        actions = self.actions(world)
         # best_move = doing nothing
-        v = -10
+        v = -100
         for a in actions:
             calc_v = self.min_value(self.result(world, a))
+            
             if calc_v > v:
                 v = calc_v
                 best_a = a
@@ -51,8 +51,8 @@ class MinimaxCharacter(CharacterEntity):
 
     def max_value(self, world):
         # return a utility value
-        actions = actions(world)
-        v = -10
+        actions = self.actions(world)
+        v = -100.0
         if self.terminal_state(world): return self.utility(world)
         for a in actions:
             v = max([v, self.min_value(self.result(world, a))])
@@ -60,8 +60,10 @@ class MinimaxCharacter(CharacterEntity):
 
     def min_value(self, world):
         # return a utility value
-        actions = actions(world)
-        v = 10
+        
+        # print(world.width(), world.height())
+        actions = self.actions(world)
+        v = 100.0
         if self.terminal_state(world): return self.utility(world)
         for a in actions:
             v = max([v, self.max_value(self.result(world, a))])
@@ -90,11 +92,11 @@ class MinimaxCharacter(CharacterEntity):
         u = 0.0
 
         char = next(iter(world.characters.values()))[0]
-        char_neighbors = self.neightbors(world, char.x, char.y)
+        char_neighbors = self.neighbors(world, char.x, char.y)
 
         # looking through each monster
         for monster in next(iter(world.monsters.values())):
-            mon_neighbors = self.neightbors(world, monster.x, monster.y)
+            mon_neighbors = self.neighbors(world, monster.x, monster.y)
 
             # comparing each neightboring cell of the monster with the character
             for char_neighbor in char_neighbors:
@@ -127,16 +129,17 @@ class MinimaxCharacter(CharacterEntity):
         # bugging purposes -> if we want to see the resulting state
         # world_copy_2.printit()
 
-        return (world_copy_2, events)
-
+        return world_copy_2
 
     def actions(self, world):
+        
         # Works
 
         # returns the possibe actions that can be performed
         return self.neighbors(world, self.x, self.y)
 
-    def neightbors(self, world, cell_x, cell_y):
+    def neighbors(self, world, cell_x, cell_y):
+        
         # get the valid neighbors of a cell
         #   has to not be an empty cell
         #   has to be inbounds
