@@ -6,8 +6,9 @@ from entity import CharacterEntity
 from sensed_world import SensedWorld
 from events import Event
 from colorama import Fore, Back
+from priorityQueue import PriorityQueue
 import copy
-from math import dist
+import math
 
 class MinimaxCharacter(CharacterEntity):
     
@@ -19,7 +20,7 @@ class MinimaxCharacter(CharacterEntity):
     def do(self, world):
         (x, y) = self.minimax_decision(world)
         self.move(x, y)
-
+        # print(len(self.astar(self, world)))
         pass
         
 
@@ -71,7 +72,7 @@ class MinimaxCharacter(CharacterEntity):
 
         try:
             char = next(iter(world_copy.characters.values()))[0]
-            print("There is no character")
+            # print("There is no character")
         except:
             return True
 
@@ -105,7 +106,7 @@ class MinimaxCharacter(CharacterEntity):
                 for char_neighbor in char_neighbors:
                     for mon_neighbor in mon_neighbors:
                         if char_neighbor == mon_neighbor: 
-                            u -= 1.0
+                            u -= 50.0
                             # print("n")
 
 
@@ -117,7 +118,8 @@ class MinimaxCharacter(CharacterEntity):
                     #     print("n2")
 
             # considering the exit, I am lazy. Lets just use the eucliedean distance
-            u += dist(world.exitcell, (0, 0)) - dist(world.exitcell, (char.x, char.y))
+            # u += math.dist(world.exitcell, (0, 0)) - math.dist(world.exitcell, (char.x, char.y))
+            u -= len(self.astar(char, world))
         except:
             u = -50
             pass
@@ -177,3 +179,67 @@ class MinimaxCharacter(CharacterEntity):
                         n.append((x, y))
 
         return n
+
+    @staticmethod
+    def neighbors_of_8(wrld, x, y):
+        '''
+        Returns walkable neighbor cells of the cell we are currently in.
+        :param wrld     [SensedWorld]   world object
+        :param x        [int]           x coordinate in world
+        :param y        [int]           y coordinate in world
+        :return         [[(int, int)]]  list of all neighbors that are available
+        '''
+        # we search with right, down, left, up priority
+        neighbors = [(x + 1, y), (x + 1, y + 1), (x, y + 1), (x - 1, y + 1), (x - 1, y), (x - 1, y - 1), (x, y - 1), (x + 1, y - 1)]
+        availableNeighbors = []
+
+        for neighbor in neighbors:
+            if neighbor[0] >= 0 and neighbor[1] >= 0 and neighbor[0] < wrld.width() and neighbor[1] < wrld.height():
+                if wrld.wall_at(neighbor[0], neighbor[1]) != True:
+                    availableNeighbors.append(neighbor)
+
+        return availableNeighbors
+
+    @staticmethod
+    def heuristics(start, goal):
+        return math.sqrt(pow(abs(start[0] - goal[0]), 2) + pow(abs(start[1] - goal[1]), 2))
+
+    @staticmethod
+    def astar(char, wrld):
+        start = (char.x, char.y)
+        goal = wrld.exitcell
+
+        # Establishing our queue
+        queue = PriorityQueue()
+        queue.put(start, 0)
+        
+        cameFrom = {}
+        cost = {}
+        cost_to_visit_node = 1
+        cameFrom[start] = None
+        cost[start] = 0
+
+        exploredMap = []
+        path = []
+
+        while not queue.empty():
+            current = queue.get()
+
+            if goal == current: # found goal
+                break
+
+            nextNodes = MinimaxCharacter.neighbors_of_8(wrld, current[0], current[1])
+            for nextNode in nextNodes:
+                new_cost = cost[current] + cost_to_visit_node # cost is length of nodes + 
+                if nextNode not in cost or new_cost < cost[nextNode]:
+                    cost[nextNode] = new_cost
+                    priority = new_cost + MinimaxCharacter.heuristics(nextNode, goal)
+                    queue.put(nextNode, priority)
+                    cameFrom[nextNode] = current
+        
+        # We make our path
+        while current != start:
+            path.insert(0, current)
+            current = cameFrom[current]
+
+        return path
