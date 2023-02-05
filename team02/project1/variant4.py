@@ -19,14 +19,14 @@ random.seed(123) # TODO Change this if you want different random choices
 g = Game.fromfile('map.txt')
 g.add_monster(SelfPreservingMonster("aggressive", # name
                                     "A",          # avatar
-                                    3, 13,        # position
+                                    0, 3,        # position
                                     2             # detection range
 ))
 
 # TODO Add your character
 g.add_character(MinimaxCharacter("me", # name
                               "C",  # avatar
-                              0, 0  # position
+                              2, 4  # position
 ))
 
 # Run!

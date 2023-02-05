@@ -18,8 +18,21 @@ class MinimaxCharacter(CharacterEntity):
     #     self.y = y
 
     def do(self, world):
+
         (x, y) = self.minimax_decision(world)
         self.move(x, y)
+        exit = world.exitcell 
+        exit_neighbors = self.neighbors_of_8(world, exit[0], exit[1])
+        
+        print((self.x, self.y))
+        # force the character to move toward the exit
+        for n in exit_neighbors:
+            print("n: " + str(n))
+            if (self.x, self.y) == n:
+                dx = exit[0] - self.x
+                dy = exit[1] - self.y
+                self.move(dx, dy)
+            
         # print(len(self.astar(self, world)))
         pass
         
@@ -37,6 +50,7 @@ class MinimaxCharacter(CharacterEntity):
             if calc_v > v:
                 v = calc_v
                 best_a = a
+        # print(v, str(best_a))
         return best_a
 
     def max_value(self, world, depth, max_depth):
@@ -100,14 +114,16 @@ class MinimaxCharacter(CharacterEntity):
 
             # looking through each monster
             for monster in next(iter(world.monsters.values())):
-                mon_neighbors = self.neighbors(world, monster.x, monster.y)
+                # mon_neighbors = self.neighbors(world, monster.x, monster.y)
 
-                # comparing each neightboring cell of the monster with the character
-                for char_neighbor in char_neighbors:
-                    for mon_neighbor in mon_neighbors:
-                        if char_neighbor == mon_neighbor: 
-                            u -= 50.0
-                            # print("n")
+            #     # comparing each neightboring cell of the monster with the character
+            #     for char_neighbor in char_neighbors:
+            #         for mon_neighbor in mon_neighbors:
+            #             if char_neighbor == mon_neighbor: 
+            #                 u -= 50.0
+            #                 # print("n")
+                u += math.dist((char.x, char.y), (monster.x, monster.y))
+            
 
 
                     # # comparing if the monster is next to the character
@@ -120,10 +136,13 @@ class MinimaxCharacter(CharacterEntity):
             # considering the exit, I am lazy. Lets just use the eucliedean distance
             # u += math.dist(world.exitcell, (0, 0)) - math.dist(world.exitcell, (char.x, char.y))
             u -= len(self.astar(char, world))
+
+            if world.exitcell == (char.x, char.y): u += 100
         except:
-            u = -50
+            u -= 70.0
             pass
-    
+
+        # print(u)
         return u
 
     def result(self, world, action):
