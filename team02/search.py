@@ -10,10 +10,9 @@ from entity import CharacterEntity
 import numpy as np
 import math
 
-def neighbors_of_4(character, wrld, x, y):
+def neighbors_of_4(wrld, x, y):
     '''
     Returns walkable neighbor cells of the cell we are currently in.
-    :param character [CharacterEntity] character object
     :param wrld      [SensedWorld]     world object
     :param x         [int]             x coordinate in world
     :param y         [int]             y coordinate in world
@@ -30,20 +29,9 @@ def neighbors_of_4(character, wrld, x, y):
 
     return availableNeighbors
             
-
-def heuristics(start, goal):
-    '''
-    :param start [int, int]
-    :param goal  [int, int]
-    :return euclidean distance.
-    '''
-    return math.sqrt(pow(abs(start[0] - goal[0]), 2) + pow(abs(start[1] - goal[1]), 2))
-
-
-def neighbors_of_8(character, wrld, x, y):
+def neighbors_of_8(wrld, x, y):
     '''
     Returns walkable neighbor cells of the cell we are currently in.
-    :param character [CharacterEntity] character object
     :param wrld      [SensedWorld]     world object
     :param x         [int]             x coordinate in world
     :param y         [int]             y coordinate in world
@@ -60,19 +48,29 @@ def neighbors_of_8(character, wrld, x, y):
 
     return availableNeighbors
             
+def euclidean(start, goal):
+    '''
+    :param start [int, int]
+    :param goal  [int, int]
+    :return euclidean distance to goal
+    '''
+    return math.sqrt(pow(abs(start[0] - goal[0]), 2) + pow(abs(start[1] - goal[1]), 2))
+    
 
 def heuristics(start, goal):
     '''
     :param start [int, int]
     :param goal  [int, int]
-    :return euclidean distance.
+    :return astar heuristics value.
     '''
-    return math.sqrt(pow(abs(start[0] - goal[0]), 2) + pow(abs(start[1] - goal[1]), 2))
+    return euclidean(start, goal)
 
 def astar(character, wrld):
     '''
-    :param wrld  [SensedWorld] world object
-    :return path [[(int, int)]] fastest path from current to goal
+    Gets fastest path by using astar
+    :param character [CharacterEntity] character object
+    :param wrld      [SensedWorld]     world object
+    :return path     [[(int, int)]]    fastest path from current to goal
     '''
     start = (character.x, character.y)
     goal = wrld.exitcell
@@ -87,7 +85,6 @@ def astar(character, wrld):
     cameFrom[start] = None
     cost[start] = 0
 
-    exploredMap = []
     path = []
 
     while not queue.empty():
@@ -96,7 +93,7 @@ def astar(character, wrld):
         if goal == current: # found goal
             break
 
-        nextNodes = neighbors_of_8(character, wrld, current[0], current[1])
+        nextNodes = neighbors_of_8(wrld, current[0], current[1])
         for nextNode in nextNodes:
             new_cost = cost[current] + cost_to_visit_node
             if nextNode not in cost or new_cost < cost[nextNode]:

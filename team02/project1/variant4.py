@@ -30,4 +30,4 @@ g.add_character(AggCharacter("me", # name
 ))
 
 # Run!
-g.go()
+g.go(0)
