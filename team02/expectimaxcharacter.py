@@ -14,7 +14,6 @@ class ExpectimaxCharacter(CharacterEntity):
     def do(self, wrld):
         char = next(iter(wrld.characters.values()))[0]
         mons = next(iter(wrld.monsters.values()))[0]
-        ex = wrld.exitcell
 
         # Character has index 0 and monsters have index >= 1
         def getLegalActions(charIndex, wrld):
@@ -49,13 +48,13 @@ class ExpectimaxCharacter(CharacterEntity):
             for event in events:
                 # print(event)
                 if event.tpe == Event.CHARACTER_KILLED_BY_MONSTER or event.tpe == Event.BOMB_HIT_CHARACTER:
-                    return world.scores[char.name] - 100000000000
+                    return world.scores[char.name] - 1000000
                 elif event.tpe == Event.CHARACTER_FOUND_EXIT:
                     return world.scores[char.name] + 1000000
                    
             char_max = next(iter(world.characters.values()))[0]
 
-            if depth == 3:
+            if depth == 2:
                 return world.scores[char_max.name] - len(ExpectimaxCharacter.astar(char_max, world)) 
 
             v = float("-inf")
@@ -70,14 +69,14 @@ class ExpectimaxCharacter(CharacterEntity):
             for event in events:
                 # print(event)
                 if event.tpe == Event.BOMB_HIT_CHARACTER or event.tpe == Event.CHARACTER_KILLED_BY_MONSTER:
-                    return world.scores[char.name] - 100000000000
+                    return world.scores[char.name] - 1000000
                 elif event.tpe == Event.CHARACTER_FOUND_EXIT:
                     return world.scores[char.name] + 1000000
 
             mons_exp = next(iter(world.monsters.values()))[0]
             char_exp = next(iter(world.characters.values()))[0]
 
-            if depth == 3:
+            if depth == 2:
                 return world.scores[char_exp.name] - len(ExpectimaxCharacter.astar(char_exp, world))                 
 
             v = 0
