@@ -11,7 +11,7 @@ class AggCharacter(CharacterEntity):
     def do(self, wrld):
         
         # Check monster location
-        is_monster_near = self.monster_nearby(wrld, 5)
+        is_monster_near = self.monster_nearby(wrld, 9)
         
         # Use Astar to go to goal while not near a monster
         if is_monster_near != True:
@@ -25,7 +25,7 @@ class AggCharacter(CharacterEntity):
         
         # Flip to minimax while near a monster
         else:
-            walk = self.minimax(wrld, 4)
+            walk = self.minimax(wrld, 5)
             self.move(walk[0], walk[1])
 
     def monster_nearby(self, wrld, near):
@@ -54,6 +54,7 @@ class AggCharacter(CharacterEntity):
 
         newwrld = wrld.from_world(wrld)
         
+        # these work well.
         char = next(iter(newwrld.characters.values()))[0]
         monst = next(iter(newwrld.monsters.values()))[0]
         
@@ -69,11 +70,15 @@ class AggCharacter(CharacterEntity):
                             # Character moves, and all events happen, now we move forward with the code
                             char.move(dx, dy)
                             (newerwrld, events) = newwrld.next()
-                            char, monst, newerwrld = AggCharacter.get_char_and_monst(newerwrld, char, monst)
 
                             # No events happened
                             if len(events) == 0:
-                                u, alpha, beta = AggCharacter.min_val(newwrld, depth, curr_depth, char, monst, alpha, beta)
+                                try:
+                                    newchar, newmonst = AggCharacter.get_char_and_monst(newerwrld)
+                                except:
+                                    continue
+                                
+                                u, alpha, beta = AggCharacter.min_val(newwrld, depth, curr_depth, newchar, newmonst, alpha, beta)
 
                                 print(beta)
                                 print(alpha)
@@ -117,21 +122,20 @@ class AggCharacter(CharacterEntity):
                     if (dx != 0 or dy != 0) and char.y + dy >= 0 and char.y + dy < wrld.height():
                         if not wrld.wall_at(char.x + dx, char.y + dy):
                             # All bomberman actions and moves getting played:
-                            print("doing a move")
-                            print((char.x, char.y))
                             char.move(dx, dy)
                             (newwrld, events) = wrld.next()
-                            print(dx)
-                            print(next(iter(newwrld.characters.values()))[0].x)
                             
-                            char, monst, newwrld = AggCharacter.get_char_and_monst(newwrld, char, monst)
 
                             # No events happened during move:
                             if len(events) == 0:
+                                try:
+                                    newchar, newmonst = AggCharacter.get_char_and_monst(newwrld)
+                                except:
+                                    continue
                                 
                                 # If we are at depth, assign value:
                                 if curr_depth == depth:
-                                    u = max(u, AggCharacter.reward(char, monst, newwrld))
+                                    u = max(u, AggCharacter.reward(newchar, newmonst, newwrld))
 
                                     if u >= b:
                                         return u, a, b
@@ -140,7 +144,7 @@ class AggCharacter(CharacterEntity):
 
                                 # If we aren't at depth, go deeper:
                                 else:
-                                    u_new, a, b = AggCharacter.min_val(newwrld, depth, curr_depth, char, monst, a, b)
+                                    u_new, a, b = AggCharacter.min_val(newwrld, depth, curr_depth, newchar, newmonst, a, b)
                                     u = max(u, u_new)                
                                     
                             
@@ -151,7 +155,6 @@ class AggCharacter(CharacterEntity):
 
                             # Terminal, character found exit
                             elif events[0].tpe == events[0].CHARACTER_FOUND_EXIT:
-                                print("we found exit?")
                                 u = 100
                                 return u, a, b # immediately return, can't get better
         return u, a, b
@@ -174,26 +177,26 @@ class AggCharacter(CharacterEntity):
                         if not wrld.wall_at(monst.x + dx, monst.y + dy):
                             monst.move(dx, dy)
                             (newwrld, events) = wrld.next()
-                            
-                            char, monst, newwrld = AggCharacter.get_char_and_monst(newwrld, char, monst)
 
                             # No events
                             if len(events) == 0:
+                                try:
+                                    newchar, newmonst = AggCharacter.get_char_and_monst(newwrld)
+                                except:
+                                    continue
                                 
                                 # reached max depth
                                 if curr_depth == depth:
-                                    u = min(u, AggCharacter.reward(char, monst, newwrld))
+                                    u = min(u, AggCharacter.reward(newchar, newmonst, newwrld))
                                     
-                                    '''
                                     if u <= a:
                                         return u, a, b
 
                                     b = min(b, u)
-                                    '''
 
                                 # not at max depth, go deeper
                                 else:
-                                    u_new, a, b = AggCharacter.max_val(newwrld, depth, curr_depth, char, monst, a, b)
+                                    u_new, a, b = AggCharacter.max_val(newwrld, depth, curr_depth, newchar, newmonst, a, b)
                                     u = min(u, u_new)
 
                             # Terminal, character killed
@@ -212,7 +215,7 @@ class AggCharacter(CharacterEntity):
         R = 0
         # distance to goal
         goal = wrld.exitcell
-        g_weight = 0.8
+        g_weight = 0.5
 
         a_path = search.astar(char, wrld)
 
@@ -221,25 +224,20 @@ class AggCharacter(CharacterEntity):
         dist_to_monst = search.euclidean((char.x, char.y), (monst.x, monst.y))
 
         if dist_to_monst < 1.5:
-            R -= 1.5
+            R -= 20
         elif dist_to_monst < 3:
-            R -= 1
-        elif dist_to_monst < 4:
-            R -= 0.5
+            R -= 10
+        elif dist_to_monst < 5:
+            R -= 7
+        elif dist_to_monst < 8:
+            R -= 4
         
         return R
 
     @staticmethod
-    def get_char_and_monst(wrld, oldchar, oldmonst):
+    def get_char_and_monst(wrld):
         char = next(iter(wrld.characters.values()))[0]
         monst = next(iter(wrld.monsters.values()))[0]
-
-        char.x = oldchar.x
-        char.y = oldchar.y
-
-        monst.x = oldmonst.x
-        monst.y = oldmonst.y
-
-        return char, monst, wrld        
+        return char, monst
         
         
