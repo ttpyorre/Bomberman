@@ -66,10 +66,9 @@ class AggCharacter(CharacterEntity):
                 for dy in [-1, 0, 1]:
                     if (dx != 0 or dy != 0) and char.y + dy >= 0 and char.y + dy < wrld.height():
                         if not wrld.wall_at(char.x + dx, char.y + dy):
-                            # Character moves, and all events happen, now we move forward with the code
-                            char.move(dx, dy)
-                            (newerwrld, events) = newwrld.next()
-                            char, monst, newerwrld = AggCharacter.get_char_and_monst(newerwrld, char, monst)
+                            # Check terminal states
+                            
+
 
                             # No events happened
                             if len(events) == 0:
@@ -117,12 +116,8 @@ class AggCharacter(CharacterEntity):
                     if (dx != 0 or dy != 0) and char.y + dy >= 0 and char.y + dy < wrld.height():
                         if not wrld.wall_at(char.x + dx, char.y + dy):
                             # All bomberman actions and moves getting played:
-                            print("doing a move")
-                            print((char.x, char.y))
                             char.move(dx, dy)
                             (newwrld, events) = wrld.next()
-                            print(dx)
-                            print(next(iter(newwrld.characters.values()))[0].x)
                             
                             char, monst, newwrld = AggCharacter.get_char_and_monst(newwrld, char, monst)
 
@@ -230,16 +225,7 @@ class AggCharacter(CharacterEntity):
         return R
 
     @staticmethod
-    def get_char_and_monst(wrld, oldchar, oldmonst):
-        char = next(iter(wrld.characters.values()))[0]
-        monst = next(iter(wrld.monsters.values()))[0]
-
-        char.x = oldchar.x
-        char.y = oldchar.y
-
-        monst.x = oldmonst.x
-        monst.y = oldmonst.y
-
-        return char, monst, wrld        
+    def terminal_states(wrld, char, monst):
         
+        if 
         
