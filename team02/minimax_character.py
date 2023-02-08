@@ -18,152 +18,153 @@ class MinimaxCharacter(CharacterEntity):
     #     self.y = y
 
     def do(self, world):
-
+        # self.move(1, 0)
+        # print(self.actions(world))
+        # print(self.non_terminal_utility(world))
+        
         (x, y) = self.minimax_decision(world)
         self.move(x, y)
+        
+        self.move_to_exit(world)
+
+        # self.min_value(None)
+        pass
+
+    def move_to_exit(self, world):
         exit = world.exitcell 
         exit_neighbors = self.neighbors_of_8(world, exit[0], exit[1])
         
         print((self.x, self.y))
         # force the character to move toward the exit
         for n in exit_neighbors:
-            print("n: " + str(n))
+            print("n: " + str(n)+ " util: "+str(self.non_terminal_utility(world)))
             if (self.x, self.y) == n:
                 dx = exit[0] - self.x
                 dy = exit[1] - self.y
                 self.move(dx, dy)
-            
-        # print(len(self.astar(self, world)))
-        pass
         
 
     def minimax_decision(self, world):
-        
+        char = self.get_char(world)
+
         actions = self.actions(world)
         best_a = (0,0)
-        v = -100
+        v = float("-inf")
         depth = 1
         max_depth = 5
         for a in actions:
-            calc_v = self.min_value(self.result(world, a), depth + 1, max_depth)
+            char.move(a[0], a[1])
+            (_next_world, events) = world.next()
+
+            calc_v = self.min_value(_next_world, events, depth + 1, max_depth)
             
-            if calc_v > v:
+            if calc_v > v :
                 v = calc_v
                 best_a = a
         # print(v, str(best_a))
         return best_a
 
-    def max_value(self, world, depth, max_depth):
+    
+
+    def max_value(self, world, events, depth, max_depth):
         # return a utility value
         actions = self.actions(world)
-        v = -100.0
-        if self.terminal_state(world) or depth == max_depth: return self.utility(world)
+        v = float("-inf")
+
+        # lets just consider the world passed in
+        (isTerminalState, util) = self.terminal_state(world, events, depth, max_depth)
+        if isTerminalState: return util
+
+        # its not a terminal state, then we need to consider the next depth
         for a in actions:
-            v = max([v, self.min_value(self.result(world, a), depth + 1, max_depth)])
+            (_new_world, events) = self.result(world, a)
+            v = max([v, self.min_value(_new_world, events, depth + 1, max_depth)])
         return v
 
-    def min_value(self, world, depth, max_depth):
+    def min_value(self, world, events, depth, max_depth):
         # return a utility value
-        
-        # print(world.width(), world.height())
         actions = self.actions(world)
-        v = 100.0
-        if self.terminal_state(world) or depth == max_depth: return self.utility(world)
+        v = float("inf")
+
+        # lets just consider the world passed in
+        (isTerminalState, util) = self.terminal_state(world, events, depth, max_depth)
+        if isTerminalState: return util
+
+        # its not a terminal state, then we need to consider the next depth
         for a in actions:
-            v = min([v, self.max_value(self.result(world, a), depth + 1, max_depth)])
+            (_new_world, events) = self.result(world, a)
+            v = min([v, self.max_value(_new_world, events, depth + 1, max_depth)])
         return v
 
-    def terminal_state(self, world):
-        # we should check if we are at the exit or attacked by the monsiter
-        # monster
-
-        world_copy = SensedWorld.from_world(world)
-        (world_copy, events) = world_copy.next()
-        
-        for e in events:
-            if e.tpe == Event.CHARACTER_KILLED_BY_MONSTER or e.tpe == Event.CHARACTER_FOUND_EXIT: return True
-        pass
+    def terminal_state(self, world, events, depth, max_depth):
+        # if the terminal state returns nothing, then we should be good
+        # other wise we should handle it better
 
         try:
-            char = next(iter(world_copy.characters.values()))[0]
-            # print("There is no character")
+            char = self.get_char(world)
+
+            if depth >= max_depth:
+                return (True, self.non_terminal_utility(world))
+
+            for event in events:
+
+                if event.tpe == Event.CHARACTER_KILLED_BY_MONSTER or event.tpe == Event.BOMB_HIT_CHARACTER:
+                    return (True, float(world.scores[char.name] - 1000000))
+                elif event.tpe == Event.CHARACTER_FOUND_EXIT:
+                    return (True, float(world.scores[char.name] + 1000000))
         except:
-            return True
-
-        # return world.monsters_at(self.x, self.y) or world.exit_at(self.x, self.y)
-        # bomb blast
-        return False
+            return (True, -10000000.0)
         
-    def utility(self, world):
-        # the util of the char's position looses -1 for every neighboring space matching the monster
-        # the util of the state looses -2 for all monsters in the neighbor of the character
+        # there is no terminal event that occured
+        return (False, None)
+   
+    def non_terminal_utility(self, world):
+        char = self.get_char(world)
+        exit = world.exitcell
+        # mon = self.get_monster(world)
 
-        # include the neighborhoods to define utility
-        #   for the neighbors of a monster multiply by -0.5
+        u = float(world.scores[char.name])
 
-        # Include the distance calc from a start
-
-        # how about walls
-        # lets assume there is no cost
-
-        u = 0.0
-
+        # looking through each monster
+        for monster in next(iter(world.monsters.values())):
+            u += 10.0*math.dist((char.x, char.y), (monster.x, monster.y))
+            
         try:
-            char = next(iter(world.characters.values()))[0]
-            char_neighbors = self.neighbors(world, char.x, char.y)
+            path_len = len(self.astar(char, world))
+            
+        except:
+            # not really too sure, somehow it is passed a None World
+            path_len = 0
+        
+        if path_len >= 3: 
+            u -= float(8*path_len)
+            u -= float(10*math.dist((char.x, char.y), (exit[0], exit[1])))
+        else:
+            u -= float(14*math.dist((char.x, char.y), (exit[0], exit[1])))
+            # for monster in next(iter(world.monsters.values())):
+            #     u += 3.0*math.dist((char.x, char.y), (monster.x, monster.y))
 
-            # looking through each monster
-            for monster in next(iter(world.monsters.values())):
-                # mon_neighbors = self.neighbors(world, monster.x, monster.y)
 
-            #     # comparing each neightboring cell of the monster with the character
-            #     for char_neighbor in char_neighbors:
-            #         for mon_neighbor in mon_neighbors:
-            #             if char_neighbor == mon_neighbor: 
-            #                 u -= 50.0
-            #                 # print("n")
-                u += math.dist((char.x, char.y), (monster.x, monster.y))
+        # The len of the path close to the goal
+        # at the end only causes more issues than it helps
             
 
-
-                    # # comparing if the monster is next to the character
-                    # print("c: " + str(char_neighbor))
-                    # print("M: " + str((monster.x, monster.y)))
-                    # if char_neighbor == (monster.x, monster.y): 
-                    #     u -= 2
-                    #     print("n2")
-
-            # considering the exit, I am lazy. Lets just use the eucliedean distance
-            # u += math.dist(world.exitcell, (0, 0)) - math.dist(world.exitcell, (char.x, char.y))
-            u -= len(self.astar(char, world))
-
-            if world.exitcell == (char.x, char.y): u += 100
-        except:
-            u -= 70.0
-            pass
-
-        # print(u)
+        # there are multiple points where the lenght of astar is the same
+        
         return u
 
     def result(self, world, action):
         # returns the new new world resulting from the action at
         # new_world = copy.deepcopy(world)
-        world_copy = SensedWorld.from_world(world)
-        try:
-            char = next(iter(world_copy.characters.values()))[0]   # returns a list of characters
-            char.move(action[0], action[1])                  # since there is only 1 character in the list, just take the first element
-            (world_copy_2, events) = world_copy.next()          # creates a new world with the applied action
+        char = self.get_char(world)   
+        char.move(action[0], action[1])                  
+        return world.next()  
+        # try:
+                    
 
-            # bugging purposes -> if we want to see the resulting state
-            # world_copy_2.printit()
-
-            return world_copy_2
-
-        except:
-            print("The character is dead already")
-            return None
-
-        
+        # except:
+        #     print("The character is dead already")
+        #     return (None, None)
 
     def actions(self, world):
         
@@ -171,34 +172,44 @@ class MinimaxCharacter(CharacterEntity):
 
         # returns the possibe actions that can be performed
         a = []
-        for n in self.neighbors(world, self.x, self.y):
+        for n in self.neighbors_of_8(world, self.x, self.y):
             a.append((n[0]-self.x, n[1]-self.y))
         return a
 
-    def neighbors(self, world, cell_x, cell_y):
+    # def neighbors(self, world, cell_x, cell_y):
         
-        # get the valid neighbors of a cell
-        #   has to not be an empty cell
-        #   has to be inbounds
+    #     # get the valid neighbors of a cell
+    #     #   has to not be an empty cell
+    #     #   has to be inbounds
 
-        def within_bounds(x_, y_):
-            if x_ >= 0 and x_ < world.width():
-                if y_ >=0 and y_< world.height():
-                    return True
-            return False
+    #     def within_bounds(x_, y_):
+    #         if x_ >= 0 and x_ < world.width():
+    #             if y_ >=0 and y_< world.height():
+    #                 return True
+    #         return False
 
-        n = []
+    #     n = []
         
-        for dx in [-1, 0, 1]:
-            for dy in [-1, 0, 1]:
-                x = cell_x + dx
-                y = cell_y + dy
-                if within_bounds(x, y):
-                    if world.empty_at(x, y):
-                        n.append((x, y))
+    #     for dx in [-1, 0, 1]:
+    #         for dy in [-1, 0, 1]:
+    #             x = cell_x + dx
+    #             y = cell_y + dy
+    #             if within_bounds(x, y):
+    #                 if world.empty_at(x, y):
+    #                     n.append((x, y))
 
         return n
 
+    @staticmethod
+    def get_char(world):
+        """Return the character"""
+        return next(iter(world.characters.values()))[0]
+
+    # @staticmethod
+    # def get_monster(world):
+    #     """Return monster[s]"""
+    #     return next(iter(world.monsters.values()))[0]
+        
     @staticmethod
     def neighbors_of_8(wrld, x, y):
         '''

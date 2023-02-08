@@ -18,7 +18,7 @@ from minimax_character import MinimaxCharacter
 
 
 # Create the game
-random.seed(234) # TODO Change this if you want different random choices
+random.seed(124) # TODO Change this if you want different random choices
 g = Game.fromfile('map.txt')
 g.add_monster(SelfPreservingMonster("selfpreserving", # name
                                     "S",              # avatar
@@ -29,7 +29,7 @@ g.add_monster(SelfPreservingMonster("selfpreserving", # name
 # TODO Add your character
 g.add_character(MinimaxCharacter("me", # name
                               "C",  # avatar
-                              0, 0  # position
+                                0, 0  # position
 ))
 
 # 6, 18
