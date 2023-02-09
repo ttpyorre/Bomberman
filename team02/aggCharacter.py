@@ -72,7 +72,7 @@ class AggCharacter(CharacterEntity):
         for dx in [-1, 0, 1]:
             if char.x + dx >= 0 and char.x + dx < wrld.width():
                 for dy in [-1, 0, 1]:
-                    if (dx != 0 or dy != 0) and char.y + dy >= 0 and char.y + dy < wrld.height():
+                    if char.y + dy >= 0 and char.y + dy < wrld.height():
                         if not wrld.wall_at(char.x + dx, char.y + dy):
                             # Character moves, and all events happen, now we move forward with the code
                             char.move(dx, dy)
@@ -86,7 +86,7 @@ class AggCharacter(CharacterEntity):
                                     continue
 
                                 # Absolutely never get close to the monster
-                                dist_to_monst = search.euclidean((newchar.x, newchar.y), (newmonst.x, newmonst.y))
+                                dist_to_monst = search.euclidean((newchar.x + dx, newchar.y + dy), (newmonst.x, newmonst.y))
                                 u_new = AggCharacter.min_val(newwrld, depth, curr_depth, newchar, newmonst, alpha, beta)
 
                                 # We get our path from the previous values.
@@ -99,7 +99,7 @@ class AggCharacter(CharacterEntity):
                             # Terminal, we got killed by a monster
                             elif events[0].tpe == events[0].CHARACTER_KILLED_BY_MONSTER:
                                 print("Character Killed")
-                                u = -100
+                                u = -10000
                                 path = (u, (dx, dy))
                                 path_list.append(path)
                                 continue
@@ -131,7 +131,7 @@ class AggCharacter(CharacterEntity):
         for dx in [-1, 0, 1]:
             if char.x + dx >= 0 and char.x + dx < wrld.width():
                 for dy in [-1, 0, 1]:
-                    if (dx != 0 or dy != 0) and char.y + dy >= 0 and char.y + dy < wrld.height():
+                    if char.y + dy >= 0 and char.y + dy < wrld.height():
                         if not wrld.wall_at(char.x + dx, char.y + dy):
                             # All bomberman actions and moves getting played:
                             char.move(dx, dy)
@@ -158,7 +158,7 @@ class AggCharacter(CharacterEntity):
                                 # If we aren't at depth, go deeper:
                                 else:
                                     u_new = AggCharacter.min_val(newwrld, depth, curr_depth, newchar, newmonst, a, b)
-                                    if u_new >= b:
+                                    if u_new > b:
                                         return u_new
                                     elif u_new == 1000:
                                         return u # exit found, get there 
