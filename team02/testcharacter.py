@@ -9,4 +9,6 @@ class TestCharacter(CharacterEntity):
 
     def do(self, wrld):
         # Your code here
-        pass
+        char = next(iter(wrld.characters.values()))[0]
+        print(wrld.exitcell)
+        
