@@ -13,10 +13,11 @@ from monsters.selfpreserving_monster import SelfPreservingMonster
 sys.path.insert(1, '../team02')
 from testcharacter import TestCharacter
 from aggCharacter import AggCharacter
+from selfPreserveCharacter import SelfPreserveCharacter
 from interactivecharacter import InteractiveCharacter
 
 # Create the game
-random.seed(9) # TODO Change this if you want different random choices
+random.seed(123456789) # TODO Change this if you want different random choices
 g = Game.fromfile('map.txt')
 g.add_monster(SelfPreservingMonster("selfpreserving", # name
                                     "S",              # avatar
@@ -24,16 +25,17 @@ g.add_monster(SelfPreservingMonster("selfpreserving", # name
                                     1                 # detection range
 ))
 
+'''
 g.add_character(InteractiveCharacter("me", # name
                              "C",  # avatar
                              0, 0  # position
 ))
 '''
 # TODO Add your character
-g.add_character(AggCharacter("me", # name
+g.add_character(SelfPreserveCharacter("me", # name
                               "C",  # avatar
                               0, 0  # position
 ))
-'''
+
 # Run!
 g.go(1)
