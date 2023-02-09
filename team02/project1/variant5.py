@@ -24,7 +24,7 @@ g.add_monster(StupidMonster("stupid", # name
 g.add_monster(SelfPreservingMonster("aggressive", # name
                                     "A",          # avatar
                                     3, 13,        # position
-                                    1             # detection range
+                                    2             # detection range
 ))
 
 # TODO Add your character

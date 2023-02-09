@@ -65,6 +65,27 @@ class ExpectimaxCharacter(CharacterEntity):
                 v = max(v, exp_value(depth + 1, newwrld, newevents))
             return v
 
+        def most_likely_actions(world, actions):
+            # I assume that this is for the monster
+            prob_action_list = []
+            norm_factor = 0.0
+
+            mons = next(iter(world.monsters.values()))[0]
+            char = next(iter(world.characters.values()))[0]
+
+            for action in actions:
+                x = mons.x + action[0]
+                y = mons.y + action[1]
+                
+                distance = math.dist((x, y), (char.x, char.y))
+                prob_action_list.append((distance, (action)))
+                norm_factor += distance
+
+            for set in prob_action_list:
+                set[0] /= norm_factor
+
+            return prob_action_list
+                
         def exp_value(depth, world, events):
             for event in events:
                 # print(event)
@@ -80,10 +101,12 @@ class ExpectimaxCharacter(CharacterEntity):
                 return world.scores[char_exp.name] - len(ExpectimaxCharacter.astar(char_exp, world))                 
 
             v = 0
-            p = 1.0 / len(getLegalActions(1, world))
-            for a in getLegalActions(1, world):
+            # p = 1.0 / len(getLegalActions(1, world))
+            actions = getLegalActions(1, world)
+            for set in most_likely_actions(world, actions):
                 # print(a)
-                mons_exp.move(a[0], a[1])
+                p = set[0]
+                mons_exp.move(set[1][0], set[1][1])
                 (newwrld, newevents) = world.next()
                 v = v + p * max_value(depth + 1, newwrld, newevents)
             return v
@@ -101,6 +124,8 @@ class ExpectimaxCharacter(CharacterEntity):
                 action = a
 
         self.move(action[0], action[1])
+
+    
 
     @staticmethod
     def neighbors_of_8(wrld, x, y):
