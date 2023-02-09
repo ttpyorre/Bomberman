@@ -11,7 +11,7 @@ class AggCharacter(CharacterEntity):
     def do(self, wrld):
         
         # Check monster location
-        is_monster_near = self.monster_nearby(wrld, 9)
+        is_monster_near = self.monster_nearby(wrld, 5)
         
         # Use Astar to go to goal while not near a monster
         if is_monster_near != True:
@@ -25,7 +25,7 @@ class AggCharacter(CharacterEntity):
         
         # Flip to minimax while near a monster
         else:
-            walk = self.minimax(wrld, 5)
+            walk = self.minimax(wrld, 3)
             self.move(walk[0], walk[1])
 
     def monster_nearby(self, wrld, near):
@@ -70,6 +70,7 @@ class AggCharacter(CharacterEntity):
                             # Character moves, and all events happen, now we move forward with the code
                             char.move(dx, dy)
                             (newerwrld, events) = newwrld.next()
+                            print("hi?")
 
                             # No events happened
                             if len(events) == 0:
@@ -77,8 +78,13 @@ class AggCharacter(CharacterEntity):
                                     newchar, newmonst = AggCharacter.get_char_and_monst(newerwrld)
                                 except:
                                     continue
-                                
-                                u, alpha, beta = AggCharacter.min_val(newwrld, depth, curr_depth, newchar, newmonst, alpha, beta)
+
+                                # Absolutely never get close to the monster
+                                dist_to_monst = search.euclidean((newchar.x, newchar.y), (newmonst.x, newmonst.y))
+                                if dist_to_monst < 1.5:
+                                    u = -90
+                                else:
+                                    u, alpha, beta = AggCharacter.min_val(newwrld, depth, curr_depth, newchar, newmonst, alpha, beta)
 
                                 print(beta)
                                 print(alpha)
@@ -89,6 +95,8 @@ class AggCharacter(CharacterEntity):
 
                             # Terminal, we got killed by a monster
                             elif events[0].tpe == events[0].CHARACTER_KILLED_BY_MONSTER:
+                                events = []
+                                print("murder")
                                 u = -100
                                 path = (u, (dx, dy))
                                 path_list.append(path)
@@ -96,6 +104,8 @@ class AggCharacter(CharacterEntity):
 
                             # Terminal, we found the exit
                             elif events[0].tpe == events[0].CHARACTER_FOUND_EXIT:
+                                print("EXIT FOUND")
+                                events = []
                                 return (dx, dy) # immediately give path to goal
                            
 
@@ -135,7 +145,7 @@ class AggCharacter(CharacterEntity):
                                 
                                 # If we are at depth, assign value:
                                 if curr_depth == depth:
-                                    u = max(u, AggCharacter.reward(newchar, newmonst, newwrld))
+                                    u = max(u, AggCharacter.reward(newchar, newmonst, newwrld, True))
 
                                     if u >= b:
                                         return u, a, b
@@ -209,7 +219,7 @@ class AggCharacter(CharacterEntity):
 
 
     @staticmethod
-    def reward(char, monst, wrld):
+    def reward(char, monst, wrld, Player = False):
         '''
         '''
         R = 0
@@ -223,14 +233,16 @@ class AggCharacter(CharacterEntity):
         
         dist_to_monst = search.euclidean((char.x, char.y), (monst.x, monst.y))
 
-        if dist_to_monst < 1.5:
+        if dist_to_monst < 1.5 and Player == False:
             R -= 20
+        elif dist_to_monst < 1.5 and Player:
+            R -= -80
         elif dist_to_monst < 3:
-            R -= 10
-        elif dist_to_monst < 5:
-            R -= 7
-        elif dist_to_monst < 8:
-            R -= 4
+            R -= 5
+        elif dist_to_monst < 5.2:
+            R -= 3
+        elif dist_to_monst < 7:
+            R -= 1
         
         return R
 
