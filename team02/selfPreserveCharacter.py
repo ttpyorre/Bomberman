@@ -13,7 +13,6 @@ class SelfPreserveCharacter(CharacterEntity):
         # Check monster location
         is_monster_near = self.monster_nearby(wrld, 5)
         path = search.astar(self, wrld)
-        print(wrld.monsters.values())
         monst = next(iter(wrld.monsters.values()))[0]
         monstPath = search.astar(monst, wrld)
         
@@ -50,9 +49,10 @@ class SelfPreserveCharacter(CharacterEntity):
 
     def minimax(self, wrld, depth):
         '''
-        :param wrld
-        :param depth
-        :return location we should move to
+        Our minimax algorithm for the AI of the Bomberman
+        :param wrld         [SensedWorld]   Our world
+        :param depth        [int]           How far we want to look
+        :return (dx, dy)    [(int, int)]    The change in where we want to move to
         '''
         path = []
         path_list = []
@@ -123,6 +123,16 @@ class SelfPreserveCharacter(CharacterEntity):
     @staticmethod
     def max_val(wrld, depth, curr_depth, char, monst, a, b):
         '''
+        Calculating what Bomberman will do
+        :param wrld         [SensedWorld]   Our world
+        :param depth        [int]           Depth we want to reach
+        :param curr_depth   [int]           Current Depth
+        :param char         [Character]     Current Character
+        :param monst        [Monster]       First Monster
+        :param a            [float]         Alpha for alpha beta pruning
+        :param b            [float]         Beta for alpha beta pruning
+
+        :return [float] utility value
         '''
         curr_depth += 1
         u_new = -100
@@ -177,6 +187,16 @@ class SelfPreserveCharacter(CharacterEntity):
     @staticmethod
     def min_val(wrld, depth, curr_depth, char, monst, a, b):
         '''
+        Calculating what Monster will do
+        :param wrld         [SensedWorld]   Our world
+        :param depth        [int]           Depth we want to reach
+        :param curr_depth   [int]           Current Depth
+        :param char         [Character]     Current Character
+        :param monst        [Monster]       First Monster
+        :param a            [float]         Alpha for alpha beta pruning
+        :param b            [float]         Beta for alpha beta pruning
+
+        :return [float] utility value
         '''
         curr_depth += 1
         u_new = 100
@@ -226,6 +246,12 @@ class SelfPreserveCharacter(CharacterEntity):
     @staticmethod
     def reward(char, monst, wrld, Player = False):
         '''
+        We are calculating the reward of where we end with in the algorithm
+        :param char     [Character]     our current character
+        :param monst    [Monster]       our first monster
+        :param wrld     [SensedWorld]   our world
+
+        :return R       [Float]         reward value
         '''
         R = 0
         # distance to goal
@@ -253,6 +279,13 @@ class SelfPreserveCharacter(CharacterEntity):
 
     @staticmethod
     def get_char_and_monst(wrld):
+        '''
+        We are getting our characters
+        :param wrld     [SensedWorld]   our world
+
+        :return char    [Character]
+        :return monster [Monster]
+        '''
         char = next(iter(wrld.characters.values()))[0]
         monst = next(iter(wrld.monsters.values()))[0]
         return char, monst

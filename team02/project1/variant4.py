@@ -15,7 +15,7 @@ from aggCharacter import AggCharacter
 from interactivecharacter import InteractiveCharacter
 
 # Create the game
-random.seed(12) # 7 is a good test seed
+random.seed(6) # 7 is a good test seed
 g = Game.fromfile('map.txt')
 g.add_monster(SelfPreservingMonster("aggressive", # name
                                     "A",          # avatar
@@ -25,7 +25,7 @@ g.add_monster(SelfPreservingMonster("aggressive", # name
 
 # TODO Add your character
 
-g.add_character(AggCharacter("me", # name
+g.add_character(AggCharacter("minimax", # name
                              "C",  # avatar
                              0, 0  # position
 ))
