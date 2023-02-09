@@ -65,8 +65,8 @@ class SelfPreserveCharacterMult(CharacterEntity):
     def minimax(self, wrld, depth):
         '''
         Minimax algorithm for going past the two monsters
-        :param wrld
-        :param depth
+        :param wrld     [SensedWorld]   our world
+        :param depth    [int]           the depth we want to go to
         :return location we should move to
         '''
         path = []
@@ -139,7 +139,7 @@ class SelfPreserveCharacterMult(CharacterEntity):
     @staticmethod
     def max_val(wrld, depth, curr_depth, char, monst, monst2, a, b):
         '''
-        Calculating what We will do
+        Calculating what Bomberman will do
         :param wrld         [SensedWorld]   Our world
         :param depth        [int]           Depth we want to reach
         :param curr_depth   [int]           Current Depth

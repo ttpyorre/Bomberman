@@ -9,26 +9,25 @@ import search
 class AggCharacter(CharacterEntity):
 
     def do(self, wrld):
-        
         # Check monster location
         is_monster_near = self.monster_nearby(wrld, 6)
         path = search.astar(self, wrld)
         monst = next(iter(wrld.monsters.values()))[0]
         monstPath = search.astar(monst, wrld)
         
+        # We will always get there ahead of the monster, so we might aswell bypass minimax
+        if len(path) < len(monstPath) - 1:
+            walk = path.pop(0)
+            self.move(walk[0] - self.x, walk[1] - self.y)
+        
         # Use Astar to go to goal while not near a monster
-        if is_monster_near != True:
+        elif is_monster_near != True:
             walk = path.pop(0)
             self.move(walk[0] - self.x, walk[1] - self.y)
         
         # We go to the goal if we are right there
         elif search.euclidean((self.x, self.y), wrld.exitcell) < 2:
             self.move(wrld.exitcell[0] - self.x, wrld.exitcell[1] - self.y)
-        
-        # We will always get there ahead of the monster, so we might aswell bypass minimax
-        elif len(path) < len(monstPath) - 1:
-            walk = path.pop(0)
-            self.move(walk[0] - self.x, walk[1] - self.y)
         
         # Flip to minimax while near a monster
         else:
@@ -37,6 +36,7 @@ class AggCharacter(CharacterEntity):
 
     def monster_nearby(self, wrld, near):
         '''
+        Check if any monsters are nearby
         :param wrld          [SensedWorld]   Our world
         :param near          [int]           How close monster is
         :return monst_exists [bool]          True if we saw a monster
@@ -49,9 +49,10 @@ class AggCharacter(CharacterEntity):
 
     def minimax(self, wrld, depth):
         '''
-        :param wrld
-        :param depth
-        :return location we should move to
+        Our minimax algorithm for the AI of the Bomberman
+        :param wrld         [SensedWorld]   Our world
+        :param depth        [int]           How far we want to look
+        :return (dx, dy)    [(int, int)]    The change in where we want to move to
         '''
         path = []
         path_list = []
@@ -86,8 +87,11 @@ class AggCharacter(CharacterEntity):
                                     continue
 
                                 # Absolutely never get close to the monster
-                                dist_to_monst = search.euclidean((newchar.x + dx, newchar.y + dy), (newmonst.x, newmonst.y))
-                                u_new = AggCharacter.min_val(newwrld, depth, curr_depth, newchar, newmonst, alpha, beta)
+                                dist_to_monst = search.euclidean((newchar.x, newchar.y), (newmonst.x, newmonst.y))
+                                if dist_to_monst < 2.84:
+                                    u_new = -1000
+                                else:
+                                    u_new = AggCharacter.min_val(newwrld, depth, curr_depth, newchar, newmonst, alpha, beta) + dist_to_monst
 
                                 # We get our path from the previous values.
                                 path = (u_new, (dx, dy))
@@ -98,7 +102,6 @@ class AggCharacter(CharacterEntity):
 
                             # Terminal, we got killed by a monster
                             elif events[0].tpe == events[0].CHARACTER_KILLED_BY_MONSTER:
-                                print("Character Killed")
                                 u = -10000
                                 path = (u, (dx, dy))
                                 path_list.append(path)
@@ -107,12 +110,10 @@ class AggCharacter(CharacterEntity):
                             # Terminal, we found the exit
                             elif events[0].tpe == events[0].CHARACTER_FOUND_EXIT:
                                 print("EXIT FOUND")
-                                events = []
                                 return (dx, dy) # immediately give path to goal
                            
 
         # get our best path, and assign it in a way we will use for movement later
-        print(path_list)
         best_path = max(path_list)
         (util, path) = best_path
         
@@ -121,6 +122,16 @@ class AggCharacter(CharacterEntity):
     @staticmethod
     def max_val(wrld, depth, curr_depth, char, monst, a, b):
         '''
+        Calculating what Bomberman will do
+        :param wrld         [SensedWorld]   Our world
+        :param depth        [int]           Depth we want to reach
+        :param curr_depth   [int]           Current Depth
+        :param char         [Character]     Current Character
+        :param monst        [Monster]       First Monster
+        :param a            [float]         Alpha for alpha beta pruning
+        :param b            [float]         Beta for alpha beta pruning
+
+        :return [float] utility value
         '''
         curr_depth += 1
 
@@ -170,7 +181,7 @@ class AggCharacter(CharacterEntity):
                             # Terminal, character killed
                             elif events[0].tpe == events[0].CHARACTER_KILLED_BY_MONSTER:
                                 u = -1000
-                                return u # If this event happens, we will always die 
+                                continue # If this event happens, we will always die 
 
                             # Terminal, character found exit
                             elif events[0].tpe == events[0].CHARACTER_FOUND_EXIT:
@@ -181,6 +192,16 @@ class AggCharacter(CharacterEntity):
     @staticmethod
     def min_val(wrld, depth, curr_depth, char, monst, a, b):
         '''
+        Calculating what Monster will do
+        :param wrld         [SensedWorld]   Our world
+        :param depth        [int]           Depth we want to reach
+        :param curr_depth   [int]           Current Depth
+        :param char         [Character]     Current Character
+        :param monst        [Monster]       First Monster
+        :param a            [float]         Alpha for alpha beta pruning
+        :param b            [float]         Beta for alpha beta pruning
+
+        :return [float] utility value
         '''
         curr_depth += 1
         
@@ -222,6 +243,7 @@ class AggCharacter(CharacterEntity):
                                     if u_new < a:
                                         return u_new
 
+
                                     u = min(u, u_new)
                                     b = min(b, u)
 
@@ -237,34 +259,41 @@ class AggCharacter(CharacterEntity):
     @staticmethod
     def reward(char, monst, wrld, Player = False):
         '''
+        We are calculating the reward of where we end with in the algorithm
+        :param char     [Character]     our current character
+        :param monst    [Monster]       our first monster
+        :param wrld     [SensedWorld]   our world
+
+        :return R       [Float]         reward value
         '''
         R = 0
         # distance to goal
         goal = wrld.exitcell
-        g_weight = 0.8
+        g_weight = 0.7
 
         a_path = search.astar(char, wrld)
 
+        # First part, look at length of astar to goal, the longer the path, the worse option it is
         R -= len(a_path)*g_weight
         
         dist_to_monst = search.euclidean((char.x, char.y), (monst.x, monst.y))
 
-        # If we can get to goal faster than monster can get to the goal, then
-        # we are always ahead of the monster, so:
         if Player:
             complex_dist_to_monst = len(search.astar(monst, wrld)) - 1 # -1, as character can't be next to monster, or else the game forces the event character_killed_by_monster
         else:
             complex_dist_to_monst = -1
-        if complex_dist_to_monst > len(a_path) and Player:
+
+        if complex_dist_to_monst > len(a_path):
             R = 100 + 1/len(a_path)
 
-        # We don't wnt to get super close to the walls
+        # We don't want to get super close to the walls, rather further away from them
+        wall_weight = 0.1
+        
         neighbors = search.neighbors_of_8(wrld, char.x, char.y)
-        R += len(neighbors)*0.1
+        R += len(neighbors)*wall_weight
 
-        if dist_to_monst < 1.5 and Player == False:
-            R -= 10000
-        elif dist_to_monst < 1.5 and Player:
+        # The most important part, the closer we are to the monster, the worse it is for us.
+        if dist_to_monst < 1.5:
             R -= 10000
         elif dist_to_monst < 3:
             R -= 70
@@ -279,6 +308,13 @@ class AggCharacter(CharacterEntity):
 
     @staticmethod
     def get_char_and_monst(wrld):
+        '''
+        We are getting our characters
+        :param wrld     [SensedWorld]   our world
+
+        :return char    [Character]
+        :return monster [Monster]
+        '''
         char = next(iter(wrld.characters.values()))[0]
         monst = next(iter(wrld.monsters.values()))[0]
         return char, monst
