@@ -14,6 +14,8 @@ from monsters.selfpreserving_monster import SelfPreservingMonster
 sys.path.insert(1, '../team02')
 from testcharacter import TestCharacter
 from selfPreserveCharacterMult import SelfPreserveCharacterMult
+from bugTest_multMonst import BugTestVar5
+
 
 # Create the game
 random.seed(9) # TODO Change this if you want different random choices
@@ -27,9 +29,15 @@ g.add_monster(SelfPreservingMonster("aggressive", # name
                                     3, 13,        # position
                                     1             # detection range
 ))
-
-# TODO Add your character
+'''
+# Our AI
 g.add_character(SelfPreserveCharacterMult("minimax-multi", # name
+                              "C",  # avatar
+                              0, 0  # position
+))
+'''
+# bug testing
+g.add_character(BugTestVar5("minimax-multi", # name
                               "C",  # avatar
                               0, 0  # position
 ))
