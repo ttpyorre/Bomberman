@@ -11,6 +11,7 @@ from monsters.selfpreserving_monster import SelfPreservingMonster
 
 # TODO This is your code!
 sys.path.insert(1, '../team02')
+sys.path.insert(1, './charactersP1')
 from aggCharacter import AggCharacter
 from interactivecharacter import InteractiveCharacter
 

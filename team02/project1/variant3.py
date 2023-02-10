@@ -11,6 +11,7 @@ from monsters.selfpreserving_monster import SelfPreservingMonster
 
 # TODO This is your code!
 sys.path.insert(1, '../team02')
+sys.path.insert(1, './charactersP1')
 from aggCharacter import AggCharacter
 from selfPreserveCharacter import SelfPreserveCharacter
 from interactivecharacter import InteractiveCharacter
@@ -26,17 +27,25 @@ g.add_monster(SelfPreservingMonster("selfpreserving", # name
                                     1                 # detection range
 ))
 
-
-g.add_character(InteractiveCharacterBugSearch("me", # name
+'''
+g.add_character(InteractiveCharacterBugSearch("Bug-Hunter", # name
                              "C",  # avatar
                              0, 0  # position
 ))
 '''
-# TODO Add your character
-g.add_character(SelfPreserveCharacter("me", # name
+
+# Our AI character
+g.add_character(SelfPreserveCharacter("minimax", # name
+                              "C",  # avatar
+                              0, 0  # position
+))
+
+'''
+g.add_character(AggCharacter("minimax-aggro", # name
                               "C",  # avatar
                               0, 0  # position
 ))
 '''
+
 # Run!
 g.go(1)
