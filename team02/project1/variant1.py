@@ -9,6 +9,7 @@ from game import Game
 
 # TODO This is your code!
 sys.path.insert(1, '../team02')
+sys.path.insert(1, './charactersP1')
 
 # Uncomment this if you want the empty test character
 from astarCharacter import AstarCharacter
