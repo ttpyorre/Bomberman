@@ -10,42 +10,35 @@ from priorityQueue import PriorityQueue
 import numpy as np
 import math
 import bombState
+import search
 
 class BombermanCharacter(CharacterEntity):
 
     WALK_PATH = 0
     AVOID_BOMB = 1
+    WALK_BACK_TO_PATH = 2
 
     STATE = 0
-
-    # def do(self, wrld):
-    #    """
-    #    if state = walk_path:
-    #         if there is a wall where we wanna go
-    #             place bomb
-    #             move out of the way
-    #             change state to avoid_bomb
-    #         esle
-    #             walk
-    #     if state = avoid_bomb
-    #         dont move
-    #         if bomb is gone
-    #             switch back to walk path
-    #    """
-
+    save_point = (0 , 0)
 
     def do(self, wrld):
+
+        print(self.STATE)
 
         if self.STATE == self.WALK_PATH:
 
             # Get a path ignoring the walls
-            path = self.astar(wrld, True)
+            path = self.astar(wrld, wrld.exitcell, True)
             for p in path: self.set_cell_color(p[0], p[1], Fore.RED + Back.BLUE)
 
             while path:
                 walk = path.pop()
 
                 if wrld.wall_at(walk[0], walk[1]):
+                    # Save the desired position to get back to the spot later
+                    self.save_point = walk
+
+                    # Place the bomb to open the wall
                     print("wall stopping us")
                     self.place_bomb()
                     self.STATE = self.AVOID_BOMB
@@ -58,27 +51,85 @@ class BombermanCharacter(CharacterEntity):
                     self.set_cell_color(c[0], c[1], Fore.RED + Back.YELLOW)
                     self.move(c[0] - self.x, c[0] - self.y)
 
-                    
                 else:
                     self.move(walk[0] - self.x, walk[1] - self.y)
-
 
 
         elif self.STATE == self.AVOID_BOMB:
             # we already moved out of the way, so do nothing
             self.move(0,0)
-            if not self.is_bomb_active(wrld):
+            if not self.is_bomb_active(wrld) and not self.explosions_exist(wrld):
+                print("swtich states")
+                self.STATE = self.WALK_BACK_TO_PATH
+
+        elif self.STATE == self.WALK_BACK_TO_PATH:
+            print(self.save_point)
+            
+            # find a new save point
+            if wrld.wall_at(self.save_point[0], self.save_point[1]):
+                alt = self.neighbors_of_8(wrld, self.save_point[0], self.save_point[1])
+                dis = search.euclidean(self.save_point, wrld.exitcell)
+
+                for a in alt:
+                    d = search.euclidean(a, wrld.exitcell)
+                    if d < dis: self.save_point = a
+
+            # if (self.x, self.y) == self.save_point:
+            #     self.STATE = self.WALK_PATH
+            # else:
+            # Get a path ignoring the walls
+            path = self.astar(wrld, self.save_point)
+            for p in path: self.set_cell_color(p[0], p[1], Fore.RED + Back.YELLOW)
+
+            if len(path) == 0:
                 self.STATE = self.WALK_PATH
+            else:
+                print(path)
 
+                while path:
+                    walk = path.pop()
+                    self.move(walk[0] - self.x, walk[1] - self.y)
 
+    
+    @staticmethod
+    def in_range_of_bomb(wrld, x, y):
+        
+        range = 4
+        
+        try:
+            bomb = next(iter(wrld.bombs.values()))
+        except:
+            print("no bomb")
+            return False
+
+        dx = abs(bomb.x - x)
+        dy = abs(bomb.y - y)
+        
+        if dx <= range or dy <= range:
+            return True
+        else:
+            return False
+        
     @staticmethod
     def is_bomb_active(wrld):
 
         try:
-            bomb = next(iter(wrld.bombs.values()))[0]
+            bomb = next(iter(wrld.bombs.values()))
+            print("bomb true")
+            return True
+        except:
+            print("bomb false")
+            return False
+
+    @staticmethod
+    def explosions_exist(wrld):
+        try:
+            ex = next(iter(wrld.explosions.values()))
+            print("ex exist")
             return True
         except:
             # No bomb
+            print("ex nope")
             return False
 
     @staticmethod
@@ -137,14 +188,14 @@ class BombermanCharacter(CharacterEntity):
         '''
         return math.sqrt(pow(abs(start[0] - goal[0]), 2) + pow(abs(start[1] - goal[1]), 2))
 
-    def astar(self, wrld, ignore_walls = False):
+    def astar(self, wrld, goal, ignore_walls = False):
         '''
         :param wrld         [SensedWorld] world object
         :param ignore_walls [Bool] do we ignore walls in out path
         :return path        [[(int, int)]] fastest path from current to goal
         '''
         start = (self.x, self.y)
-        goal = wrld.exitcell
+        # goal = wrld.exitcell
 
         # Establishing our queue
         queue = PriorityQueue()
