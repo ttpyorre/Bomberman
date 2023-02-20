@@ -13,42 +13,73 @@ import bombState
 
 class BombermanCharacter(CharacterEntity):
 
-    # def do(self, wrld):
-
-    #     neighbors = self.astar(wrld, True)
-
-    #     for n in neighbors:
-    #         self.set_cell_color(n[0], n[1], Fore.RED + Back.BLUE)
-
     WALK_PATH = 0
     AVOID_BOMB = 1
 
     STATE = 0
 
+    # def do(self, wrld):
+    #    """
+    #    if state = walk_path:
+    #         if there is a wall where we wanna go
+    #             place bomb
+    #             move out of the way
+    #             change state to avoid_bomb
+    #         esle
+    #             walk
+    #     if state = avoid_bomb
+    #         dont move
+    #         if bomb is gone
+    #             switch back to walk path
+    #    """
+
+
     def do(self, wrld):
-        # Astar gives us a path of nodes that we visit one by one
-        path = self.astar(wrld, True)
 
-        # visual debugging of the path
-        for p in path:
-            self.set_cell_color(p[0], p[1], Fore.RED + Back.BLUE)
+        if self.STATE == self.WALK_PATH:
 
-        self.number = self.number + 1
-        print(self.number)
+            # Get a path ignoring the walls
+            path = self.astar(wrld, True)
+            for p in path: self.set_cell_color(p[0], p[1], Fore.RED + Back.BLUE)
 
-        while path:
-            walk = path.pop()
-            if wrld.wall_at(walk[0], walk[1]):
-                print("wall")
-                self.place_bomb()
-                
-                # we also need to get out of the range of the bomb
-                corner = self.neighbors_of_4_corners(wrld, self.x, self.y)
-                c = corner.pop()
-                self.set_cell_color(c[0], c[1], Fore.RED + Back.YELLOW)
-                self.move(c[0] - self.x, c[0] - self.y)
-            else:
-                self.move(walk[0] - self.x, walk[1] - self.y)
+            while path:
+                walk = path.pop()
+
+                if wrld.wall_at(walk[0], walk[1]):
+                    print("wall stopping us")
+                    self.place_bomb()
+                    self.STATE = self.AVOID_BOMB
+                    
+                    # we also need to get out of the range of the bomb
+                    corner = self.neighbors_of_4_corners(wrld, self.x, self.y)
+
+                    # choose any available corner to go to
+                    c = corner.pop()
+                    self.set_cell_color(c[0], c[1], Fore.RED + Back.YELLOW)
+                    self.move(c[0] - self.x, c[0] - self.y)
+
+                    
+                else:
+                    self.move(walk[0] - self.x, walk[1] - self.y)
+
+
+
+        elif self.STATE == self.AVOID_BOMB:
+            # we already moved out of the way, so do nothing
+            self.move(0,0)
+            if not self.is_bomb_active(wrld):
+                self.STATE = self.WALK_PATH
+
+
+    @staticmethod
+    def is_bomb_active(wrld):
+
+        try:
+            bomb = next(iter(wrld.bombs.values()))[0]
+            return True
+        except:
+            # No bomb
+            return False
 
     @staticmethod
     def neighbors_of_8(wrld, x, y, ignore_walls = False):
