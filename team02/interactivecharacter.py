@@ -12,6 +12,11 @@ class InteractiveCharacter(CharacterEntity):
         dx, dy = 0, 0
         bomb = False
         # Handle input
+        print("x and y")
+        print([self.x, self.y])
+        print("world")
+        print(wrld.exitcell)
+        print("done")
         for c in input("How would you like to move (w=up,a=left,s=down,d=right,b=bomb)? "):
             if 'w' == c:
                 dy -= 1
