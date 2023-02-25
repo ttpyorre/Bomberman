@@ -10,7 +10,7 @@ class AggCharacter(CharacterEntity):
 
     def do(self, wrld):
         # Check monster location
-        is_monster_near = self.monster_nearby(wrld, 6)
+        is_monster_near = self.monster_nearby(wrld, 12)
         path = search.astar(self, wrld)
         monst = next(iter(wrld.monsters.values()))[0]
         monstPath = search.astar(monst, wrld)
@@ -31,7 +31,7 @@ class AggCharacter(CharacterEntity):
         
         # Flip to minimax while near a monster
         else:
-            walk = self.minimax(wrld, 6)
+            walk = self.minimax(wrld, 4)
             self.move(walk[0], walk[1])
 
     def monster_nearby(self, wrld, near):
@@ -86,6 +86,7 @@ class AggCharacter(CharacterEntity):
                                 except:
                                     continue
 
+                                
                                 # Absolutely never get close to the monster
                                 dist_to_monst = search.euclidean((newchar.x, newchar.y), (newmonst.x, newmonst.y))
                                 if dist_to_monst < 2.84:
@@ -136,7 +137,7 @@ class AggCharacter(CharacterEntity):
         curr_depth += 1
 
         # set u for max
-        u = -1000000
+        u = -1000
         
         # We check the bombermans moves at this stage
         for dx in [-1, 0, 1]:
@@ -206,7 +207,7 @@ class AggCharacter(CharacterEntity):
         curr_depth += 1
         
         # set u for min
-        u = 100000
+        u = 1000
         
         # We check the monsters moves at this stage
         for dx in [-1, 0, 1]:
@@ -257,7 +258,7 @@ class AggCharacter(CharacterEntity):
 
 
     @staticmethod
-    def reward(char, monst, wrld, Player = False):
+    def reward2(char, monst, wrld, Player = False):
         '''
         We are calculating the reward of where we end with in the algorithm
         :param char     [Character]     our current character
@@ -267,6 +268,7 @@ class AggCharacter(CharacterEntity):
         :return R       [Float]         reward value
         '''
         R = 0
+        
         # distance to goal
         goal = wrld.exitcell
         g_weight = 0.7
@@ -319,4 +321,33 @@ class AggCharacter(CharacterEntity):
         monst = next(iter(wrld.monsters.values()))[0]
         return char, monst
         
+    @staticmethod
+    def reward(char, monst, wrld, Player = False):
+        '''
+        We are calculating the reward of where we end with in the algorithm
+        :param char     [Character]     our current character
+        :param monst    [Monster]       our first monster
+        :param wrld     [SensedWorld]   our world
+
+        :return R       [Float]         reward value
+        '''
+        R = 0
+        
+        # distance to goal
+        goal = wrld.exitcell
+        a_path = search.astar(char, wrld)
+        g_weight = 0.4
+
+        # distance to monster
+        a_path_to_monst = search.astar_to_monst(char, monst, wrld)
+        
+        neighbors = search.neighbors_of_8(wrld, char.x, char.y)
+        wall_weight = 0.05        
+        R += len(neighbors)*wall_weight
+
+        # First part, look at length of astar to goal, the longer the path, the worse option it is
+        R -= len(a_path)*g_weight
+        R += len(a_path_to_monst)
+        
+        return R
         

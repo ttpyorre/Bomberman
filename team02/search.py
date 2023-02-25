@@ -108,3 +108,48 @@ def astar(character, wrld):
         current = cameFrom[current]
 
     return path
+
+def astar_to_monst(character, monst, wrld):
+    '''
+    Gets fastest path by using astar
+    :param character [CharacterEntity] character object
+    :param monst     [MonsterEntity]   world object
+    :param wrld      [SensedWorld]     world object
+    :return path     [[(int, int)]]    fastest path from current to goal
+    '''
+    start = (character.x, character.y)
+    goal = (monst.x, monst.y)
+
+    # Establishing our queue
+    queue = PriorityQueue()
+    queue.put(start, 0)
+    
+    cameFrom = {}
+    cost = {}
+    cost_to_visit_node = 1
+    cameFrom[start] = None
+    cost[start] = 0
+
+    path = []
+
+    while not queue.empty():
+        current = queue.get()
+
+        if goal == current: # found goal
+            break
+
+        nextNodes = neighbors_of_8(wrld, current[0], current[1])
+        for nextNode in nextNodes:
+            new_cost = cost[current] + cost_to_visit_node
+            if nextNode not in cost or new_cost < cost[nextNode]:
+                cost[nextNode] = new_cost
+                priority = new_cost + heuristics(nextNode, goal)
+                queue.put(nextNode, priority)
+                cameFrom[nextNode] = current
+    
+    # We make our path
+    while current != start:
+        path.insert(0, current)
+        current = cameFrom[current]
+
+    return path
