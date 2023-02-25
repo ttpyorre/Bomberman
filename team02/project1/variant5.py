@@ -29,7 +29,6 @@ g.add_monster(SelfPreservingMonster("aggressive", # name
                                     3, 13,        # position
                                     1             # detection range
 ))
-'''
 # Our AI
 g.add_character(SelfPreserveCharacterMult("minimax-multi", # name
                               "C",  # avatar
@@ -41,6 +40,7 @@ g.add_character(BugTestVar5("minimax-multi", # name
                               "C",  # avatar
                               0, 0  # position
 ))
+'''
 
 # Run!
 g.go(1)

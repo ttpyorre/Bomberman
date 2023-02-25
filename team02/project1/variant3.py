@@ -26,7 +26,7 @@ g.add_monster(SelfPreservingMonster("selfpreserving", # name
                                     1                 # detection range
 ))
 
-
+'''
 g.add_character(InteractiveCharacterBugSearch("me", # name
                              "C",  # avatar
                              0, 0  # position
@@ -37,6 +37,5 @@ g.add_character(SelfPreserveCharacter("me", # name
                               "C",  # avatar
                               0, 0  # position
 ))
-'''
 # Run!
 g.go(1)
