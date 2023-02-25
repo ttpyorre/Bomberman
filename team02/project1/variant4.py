@@ -2,6 +2,7 @@
 # This is necessary to find the main code
 import sys
 sys.path.insert(0, '../../bomberman')
+sys.path.insert(0, './characters')
 sys.path.insert(1, '..')
 
 # Import necessary stuff
@@ -15,7 +16,7 @@ from aggCharacter import AggCharacter
 from interactivecharacter import InteractiveCharacter
 
 # Create the game
-random.seed(6) # 7 is a good test seed
+random.seed(1) # 7 is a good test seed
 g = Game.fromfile('map.txt')
 g.add_monster(SelfPreservingMonster("aggressive", # name
                                     "A",          # avatar
