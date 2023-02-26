@@ -25,16 +25,12 @@ class AggCharacter(CharacterEntity):
             walk = path.pop(0)
             self.move(walk[0] - self.x, walk[1] - self.y)
         
-        # We go to the goal if we are right there
-        elif search.euclidean((self.x, self.y), wrld.exitcell) < 2:
-            self.move(wrld.exitcell[0] - self.x, wrld.exitcell[1] - self.y)
-        
         # Flip to minimax while near a monster
         else:
-            walk = self.minimax(wrld, 4)
+            walk = self.minimax(wrld, 2)
             self.move(walk[0], walk[1])
 
-    def monster_nearby(self, wrld, near):
+    def monster_nearby(self, wrld, near = 20):
         '''
         Check if any monsters are nearby
         :param wrld          [SensedWorld]   Our world
@@ -110,7 +106,6 @@ class AggCharacter(CharacterEntity):
 
                             # Terminal, we found the exit
                             elif events[0].tpe == events[0].CHARACTER_FOUND_EXIT:
-                                print("EXIT FOUND")
                                 return (dx, dy) # immediately give path to goal
                            
 
@@ -161,7 +156,6 @@ class AggCharacter(CharacterEntity):
                                 if curr_depth == depth:
                                     # Get u, we should pick the bigger between R and u
                                     u = max(u, AggCharacter.reward(newchar, newmonst, newwrld, True))
-                                    
                                     if u >= b:
                                         return u
                                     elif u >= 90: # guaranteed exit
@@ -182,7 +176,7 @@ class AggCharacter(CharacterEntity):
                             # Terminal, character killed
                             elif events[0].tpe == events[0].CHARACTER_KILLED_BY_MONSTER:
                                 u = -1000
-                                continue # If this event happens, we will always die 
+                                return u # If this event happens, we will always die 
 
                             # Terminal, character found exit
                             elif events[0].tpe == events[0].CHARACTER_FOUND_EXIT:
@@ -336,14 +330,24 @@ class AggCharacter(CharacterEntity):
         # distance to goal
         goal = wrld.exitcell
         a_path = search.astar(char, wrld)
-        g_weight = 0.4
+        g_weight = 0.7
 
         # distance to monster
         a_path_to_monst = search.astar_to_monst(char, monst, wrld)
+
+        # monst to goal
+        monst_to_goal = search.astar(monst, wrld)
+
+        # This is practically a win condition.
+        if len(monst_to_goal) > len(a_path):
+            R = 1000
+            return R
         
         neighbors = search.neighbors_of_8(wrld, char.x, char.y)
-        wall_weight = 0.05        
+        wall_weight = 0.1        
         R += len(neighbors)*wall_weight
+
+        # First let's check our path to the monster vs path to goal.
 
         # First part, look at length of astar to goal, the longer the path, the worse option it is
         R -= len(a_path)*g_weight
