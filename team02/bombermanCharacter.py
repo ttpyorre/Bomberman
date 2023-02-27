@@ -55,12 +55,7 @@ def get_char_available_actions(wrld, x, y):
 
 class BombermanCharacter(CharacterEntity):
 
-    # Defining type sof states for the bomberman
-    NORMAL = 0                  # Nothing noticable, normal
-    AVOID_BOMB = 1              # 
-    WALK_BACK_TO_PATH = 2
-
-    STATE = 1
+    
     save_point = (0 , 0)
 
     all_states = [1, 2, 3, 4, 5, 6, 7, 8]
@@ -69,66 +64,46 @@ class BombermanCharacter(CharacterEntity):
     
     previous_state = 1
     previous_action = (0,0,False)  # Do nothing
-    reward = 0
+    
 
     QTable = StateActionLookupTable(all_states, get_all_possible_actions())
     NTable = NStateActionTable(all_states, get_all_possible_actions())
 
     def do(self, wrld):
 
-        # print(search.get_all_possible_actions())
-        # print(self.all_states)
-
-        # print(self.QTable.get(0, (0, 0, False)))
-
-        self.possible_actions = get_char_available_actions(wrld, self.x, self.y)
-
-        if self.previous_state != None: 
-            # self.reward = search
-            pass
-
+        # Get the current state, actions, and the reward as the result of being in this state
         current_state = self.x + 1
-        self.reward = self.reward_calc(self.previous_state, current_state)
+        self.possible_actions = get_char_available_actions(wrld, self.x, self.y)
+        reward = self.reward_calc(self.previous_state, current_state)
 
-        print("prev:" + str(self.previous_state) + "curr:" + str(current_state))
-        action = self.q_learning(current_state, self.reward)
+
+        # print("prev:" + str(self.previous_state) + "curr:" + str(current_state))
+        action = self.q_learning(current_state, reward)
+        self.QTable.printit()
         self.execute_action(action[0], action[1], action[2])
+
         pass
 
     def execute_action(self, dx, dy, use_bomb):
         self.move(dx, dy)
         if use_bomb: self.place_bomb()
 
+    def get_max_q(self, current_state):
+        max_q = float("-inf")
+        for a in self.possible_actions:
+            q = self.QTable.get(current_state, a)
+            
+
+            if max_q == None or q > max_q:   
+                max_q = q
+
+        return max_q
+
     def q_learning(self, current_state = None, reward = 0):
         """
         current_state   - (s') the current state of the character
         reward          - R(s, a, s') the reward we just got from doing an action
         """
-        def get_max_q():
-            max_q = None
-            for a in self.possible_actions:
-                q = self.QTable.get(current_state, a)
-
-                if max_q == None or q > max_q:   
-                    max_q = q
-
-            return max_q
-
-        def explore_actions():
-            max_value = None
-            best_a = None
-            for a in self.possible_actions:
-
-                
-                value = self.explore(self.QTable.get(current_state, a), self.NTable.get(current_state, a))
-
-                if max_value == None or value > max_value:   
-                    max_value = value
-                    best_a = a
-
-            return best_a
-                
-                
 
         s = self.previous_state
         a = self.previous_action
@@ -143,17 +118,17 @@ class BombermanCharacter(CharacterEntity):
 
             # Update Q(s, a) using s', a' (current), s, a (past)
             n = self.NTable.get(s, a)
-            max_q = get_max_q()
+            max_q = self.get_max_q(current_state)
             q = self.QTable.get(s, a)
 
             print("Reward: " + str(reward))
             print(decay*max_q - q)
 
-            value = alpha*n*(reward + decay*max_q - q)
+            value = alpha*(reward + decay*max_q - q)
             self.QTable.update(s, a, value)
 
         # choose the best action (unexplored action or best util)
-        best_action = explore_actions()
+        best_action = self.get_best_action(current_state)
 
         # Update previous state and actions
         self.previous_state = current_state
@@ -169,16 +144,32 @@ class BombermanCharacter(CharacterEntity):
 
         return some score
         """
-        best_possible_reward = 10000
+        best_possible_reward = 10
         frequency_max = 5
 
-        print("explore:" + str(n) +" " + str(frequency_max))
+        # print("explore:" + str(n) +" " + str(frequency_max))
 
         if n < frequency_max:
             return best_possible_reward
         else:
             return u
         
+    def get_best_action(self, current_state):
+        """
+        Based on the current state return the best action
+        """
+        max_value = None
+        best_a = None
+        for a in self.possible_actions:
+
+            value = self.explore(self.QTable.get(current_state, a), self.NTable.get(current_state, a))
+
+            if max_value == None or value > max_value:   
+                max_value = value
+                best_a = a
+
+        return best_a
+    
     # def returnState(wrld, x, y):
     #     """ Given a world, define the state for it"""
 
@@ -194,11 +185,13 @@ class BombermanCharacter(CharacterEntity):
     #     char_pos_state = height*y + x
 
     def reward_calc(self, previous_state, current_state):
+        return current_state - 8.0
+        
 
-        if current_state > previous_state: # we just got closer to the goal
-            return 1.0
-        else:
-            return -1.0
+        # if current_state > previous_state: # we just got closer to the goal
+        #     return 1.0
+        # else:
+        #     return -1.0
 
 
 
