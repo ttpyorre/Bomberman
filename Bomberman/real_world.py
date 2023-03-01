@@ -44,7 +44,8 @@ class RealWorld(World):
         for i, elist in entities.items():
             for e in elist:
                 # Call AI
-                e.do(SensedWorld.from_world(self))
+                state = e.do(SensedWorld.from_world(self), self.state)
+                self.state = state
 
     def manage_events(self):
         for e in self.events:

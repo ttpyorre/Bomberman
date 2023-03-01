@@ -22,10 +22,11 @@ class StupidMonster(MonsterEntity):
         # All done
         return cells
 
-    def do(self, wrld):
+    def do(self, wrld, state):
         """Pick an action for the monster"""
         # Get list of safe moves
         safe = self.look_for_empty_cell(wrld)
         # Pick a move at random
         (dx, dy) = random.choice(safe)
         self.move(dx, dy)
+        return state

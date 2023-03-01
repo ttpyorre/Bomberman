@@ -15,6 +15,7 @@ sys.path.insert(1, '../team02')
 
 # Uncomment this if you want the interactive character
 from interactivecharacter import InteractiveCharacter
+from expectimaxcharacter import ExpectimaxCharacter
 
 # Create the game
 g = Game.fromfile('map.txt')
@@ -28,7 +29,7 @@ g = Game.fromfile('map.txt')
 # ))
 
 # Uncomment this if you want the interactive character
-g.add_character(InteractiveCharacter("me", # name
+g.add_character(ExpectimaxCharacter("me", # name
                                      "C",  # avatar
                                      0, 0  # position
 ))

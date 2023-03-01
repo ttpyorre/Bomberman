@@ -120,7 +120,7 @@ class AIEntity(Entity):
         self.name = name
         self.avatar = avatar[0]
 
-    def do(self, wrld):
+    def do(self, wrld, state):
         """Pick an action for the entity given the world state"""
         pass
 
