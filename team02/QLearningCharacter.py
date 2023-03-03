@@ -14,6 +14,7 @@ class QLearningCharacter(CharacterEntity):
     # weights = [0.3*3.2240646069681054, ]
     w1 = 0.3*3.2240646069681054
     w2 = 0.4*0.28043526385758355
+    w3 = 0.01
 
     STATE=0
 
@@ -24,6 +25,8 @@ class QLearningCharacter(CharacterEntity):
     WAITING = 4
     KEEPWAITING = 5
 
+    TESTING = 6
+
     def do(self, wrld):
         # self.w1 = 0.3 * weight1
         # self.w2 = 0.4 * weight2
@@ -32,56 +35,79 @@ class QLearningCharacter(CharacterEntity):
 
         
         if self.STATE == self.BOMBING:
-                self.place_bomb()
-                self.move(0, 0)
-                # Go into Running state
-                self.STATE = self.RUNNING
+            self.place_bomb()
+            self.move(0, 0)
+            # Go into Running state
+            self.STATE = self.RUNNING
+            return
         elif self.STATE == self.RUNNING:
-                runs = QLearningCharacter.neighbors_of_4_corners(wrld, self.x, self.y)
-                run = runs[0]
-                where = np.subtract(run, (self.x, self.y))
-                self.move(where[0], where[1])
-                self.STATE = self.WAITING
+            runs = QLearningCharacter.neighbors_of_4_corners(wrld, self.x, self.y)
+            run = runs[0]
+            where = np.subtract(run, (self.x, self.y))
+            self.move(where[0], where[1])
+            self.STATE = self.WAITING
+            return
         elif self.STATE == self.WAITING:
-                self.move(0, 0)
-                self.STATE = self.EXPLORING
+            self.move(0, 0)
+            self.STATE = self.EXPLORING
+            return
         elif self.STATE == self.KEEPWAITING:
-                self.move(0, 0)
-                self.STATE = self.EXPLORING
+            self.move(0, 0)
+            self.STATE = self.EXPLORING
+            return
+
         elif self.STATE == self.EXPLORING:
-                pass
+            
             # case _:
             #     pass
+            print("Exploring")
+            if self.wall_nearby(wrld, self.x, self.y):
+                # return self.BOMBING, self.w1, self.w2
+                self.STATE = self.BOMBING
+                print(self.STATE)
+                return
+            char = next(iter(wrld.characters.values()))[0]
 
-        if self.wall_nearby(wrld, self.x, self.y):
-            # return self.BOMBING, self.w1, self.w2
-            self.STATE = self.BOMBING
-        char = next(iter(wrld.characters.values()))[0]
+            if wrld.monsters.values():
+                mons = next(iter(wrld.monsters.values()))[0]
 
-        if wrld.monsters.values():
-            mons = next(iter(wrld.monsters.values()))[0]
-    
-        maxQ = float("-inf")
-        action = (0, 0)
-        for a in self.getLegalActions(0, wrld):
-            #print(a)
-            char.move(a[0], a[1])
-            (newwrld,events) = wrld.next()
-            # utility = exp_value(0, newwrld, events)
-            Q = self.q_Learning(self.w1, self.w2, newwrld)
+            maxQ = float("-inf")
+            action = (0, 0)
+            for a in self.getLegalActions(0, wrld):
+                #print(a)
+                char.move(a[0], a[1])
+                (newwrld,events) = wrld.next()
+                # utility = exp_value(0, newwrld, events)
+                Q = self.q_Learning(self.w1, self.w2, self.w3, newwrld)
 
-            if Q >= maxQ or maxQ == float("-inf"):
-                maxQ = Q
-                action = a
+                if Q >= maxQ or maxQ == float("-inf"):
+                    maxQ = Q
+                    action = a
 
-        self.move(action[0], action[1])
-        (newwrld, events) = wrld.next()
-        # Check if character is at the exit after moving
-        if newwrld.characters.values():
-            if next(iter(newwrld.characters.values())):
-                newChar = next(iter(newwrld.characters.values()))[0]   
+            self.move(action[0], action[1])
+            (newwrld, events) = wrld.next()
+            # Check if character is at the exit after moving
+            if newwrld.characters.values():
+                if next(iter(newwrld.characters.values())):
+                    newChar = next(iter(newwrld.characters.values()))[0]   
+                else:
+                    delta = abs(newwrld.scores[char.name]) + 5000 - maxQ
+                    self.w1 = self.w1 + self.alpha * delta * 1
+                    if wrld.monsters.values():
+                        tempChar = char
+                        tempChar.x = wrld.exitcell[0]
+                        tempChar.y = wrld.exitcell[1]
+                        f2 = self.feature_rep(tempChar, wrld, 2)
+                    else:
+                        f2 = 1
+                    
+                    self.w2 = self.w2 + self.alpha * delta * f2
+
+                    # return (self.EXPLORING, 0.3 * self.w1, 0.3 * self.w2)
+                    self.STATE = self.EXPLORING
+                    return
             else:
-                delta = abs(newwrld.scores[char.name]) + 5000 - maxQ
+                delta = abs(newwrld.scores[char.name]) - maxQ
                 self.w1 = self.w1 + self.alpha * delta * 1
                 if wrld.monsters.values():
                     tempChar = char
@@ -93,52 +119,43 @@ class QLearningCharacter(CharacterEntity):
                 
                 self.w2 = self.w2 + self.alpha * delta * f2
 
-                # return (self.EXPLORING, 0.3 * self.w1, 0.3 * self.w2)
+                # return (self.EXPLORING, 0.3 *  self.w1, 0.3 * self.w2)
                 self.STATE = self.EXPLORING
-        else:
-            delta = abs(newwrld.scores[char.name]) - maxQ
-            self.w1 = self.w1 + self.alpha * delta * 1
+                return
+
+            # Calculate maxQPrime for delta calculations
+            maxQprime = float("-inf")
+            for a in self.getLegalActions(0, newwrld):
+                newChar.move(a[0], a[1])
+                (Qwrld,events) = wrld.next()
+                # utility = exp_value(0, newwrld, events)
+                Q = self.q_Learning(self.w1, self.w2, self.w3, Qwrld)
+
+                if Q >= maxQprime or maxQprime == float("-inf"):
+                    maxQprime = Q
+
+            delta = ( abs(newwrld.scores[char.name]) + self.decay * maxQprime) - maxQ
+
+            f1 = self.feature_rep(char, wrld, 1)
+            self.w1 = self.w1 + self.alpha * delta * f1
+
             if wrld.monsters.values():
-                tempChar = char
-                tempChar.x = wrld.exitcell[0]
-                tempChar.y = wrld.exitcell[1]
-                f2 = self.feature_rep(tempChar, wrld, 2)
+                f2 = self.feature_rep(char, wrld, 2)
             else:
                 f2 = 1
             
             self.w2 = self.w2 + self.alpha * delta * f2
 
-            # return (self.EXPLORING, 0.3 *  self.w1, 0.3 * self.w2)
+
+            f3 = self.feature_rep(char, wrld, 3)
+            self.w3 = self.w3 + self.alpha * delta * f3
+            
+
+            # print((self.w1, self.w2))
+
+            # return (self.EXPLORING, 0.3 * self.w1, 0.3 * self.w2)
             self.STATE = self.EXPLORING
-
-        # Calculate maxQPrime for delta calculations
-        maxQprime = float("-inf")
-        for a in self.getLegalActions(0, newwrld):
-            newChar.move(a[0], a[1])
-            (Qwrld,events) = wrld.next()
-            # utility = exp_value(0, newwrld, events)
-            Q = self.q_Learning(self.w1, self.w2, Qwrld)
-
-            if Q >= maxQprime or maxQprime == float("-inf"):
-                maxQprime = Q
-
-        delta = ( abs(newwrld.scores[char.name]) + self.decay * maxQprime) - maxQ
-
-        f1 = self.feature_rep(char, wrld, 1)
-        self.w1 = self.w1 + self.alpha * delta * f1
-
-        if wrld.monsters.values():
-            f2 = self.feature_rep(char, wrld, 2)
-        else:
-            f2 = 1
-        
-        self.w2 = self.w2 + self.alpha * delta * f2
-        
-
-        # print((self.w1, self.w2))
-
-        # return (self.EXPLORING, 0.3 * self.w1, 0.3 * self.w2)
-        self.STATE = self.EXPLORING
+            return
     
     
     
@@ -159,16 +176,24 @@ class QLearningCharacter(CharacterEntity):
             # Distance to monster
             mons = next(iter(wrld.monsters.values()))[0]
             return 1 / pow((1 + QLearningCharacter.heuristics((char.x, char.y), (mons.x, mons.y))), 3)
+        if x == 3:
+            # Corners of the character
+            # corners = self.neighbors_of_4_corners(wrld, char.x, char.y)
+            # return 1 / (1 + len(corners)) 
+            return 1
             
-    def q_Learning(self, w1, w2, wrld):
+    def q_Learning(self, w1, w2, w3, wrld):
         if wrld.characters.values():
             if next(iter(wrld.characters.values())):
                 char = next(iter(wrld.characters.values()))[0]      
                 f1 = self.feature_rep(char, wrld, 1)
+                f3 = self.feature_rep(char, wrld, 3)
             else:
                 f1 = 1
+                f3 = 1
         else:
             f1 = 1
+            f3 = 1
 
         if wrld.monsters.values():
             mons = next(iter(wrld.monsters.values()))[0]
@@ -182,11 +207,11 @@ class QLearningCharacter(CharacterEntity):
         else:
             f2 = 1
 
-        Q = w1 * f1 - w2 * f2
+        Q = w1 * f1 - w2 * f2 - w3 * f3
         return Q
 
         
-    
+    @staticmethod
     def neighbors_of_4_corners(wrld, x, y):
     # we search with right, down, left, up priority
         neighbors = [(x + 1, y + 1), (x - 1, y + 1), (x - 1, y - 1), (x + 1, y - 1)]
