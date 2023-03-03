@@ -11,6 +11,8 @@ sys.path.insert(1, '../teamNN')
 from testcharacter import TestCharacter
 from minimaxCharacter import MinimaxCharacter
 from bombermanCharacter import BombermanCharacter
+# from qlearningCharacter import QLearningCharacter
+from QLearningCharacter import QLearningCharacter
 
 
 # Create the game
@@ -22,7 +24,7 @@ g = Game.fromfile('map.txt')
 #                               0, 0  # position
 # ))
 
-g.add_character(BombermanCharacter("mini", # name
+g.add_character(QLearningCharacter("mini", # name
                               "C",  # avatar
                               0, 2  # position
 ))
