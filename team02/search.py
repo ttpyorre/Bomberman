@@ -10,7 +10,6 @@ from entity import CharacterEntity
 import numpy as np
 import math
 
-
 def neighbors_of_4(wrld, x, y):
     '''
     Returns walkable neighbor cells of the cell we are currently in.
@@ -154,21 +153,55 @@ def num_walls(wrld, character):
 
 def in_range_of_bomb(wrld, x, y):
     
-    range = 4
+    brange = 4
+    
+    try:
+        bomb = next(iter(wrld.bombs.values()))
+        # print("Yay boimb")
+    except:
+        # print("no bomb")
+        return False
+    
+
+    for dx in range(-brange, brange+1):
+        for dy in range(-brange, brange+1):
+            # print("(x, y): " + str((x, y)) + " " + str((bomb.x + dx, bomb.y + dy)))
+            
+            if (x, y) == (bomb.x + dx, bomb.y):
+                return True
+            
+            if (x, y) == (bomb.x, bomb.y + dy):
+                return True
+    
+    return False
+
+    # dx = abs(bomb.x - x)
+    # dy = abs(bomb.y - y)
+
+    # print("dx:" + str(dx))
+    # print("dy:" + str(dy))
+    
+    # if dx <= range or dy <= range:
+    #     return True
+    # else:
+    #     return False
+    
+def wall_in_range_of_bomb(wrld):
+    
+    brange = 4
     
     try:
         bomb = next(iter(wrld.bombs.values()))
     except:
-        print("no bomb")
+        # print("no bomb")
         return False
 
-    dx = abs(bomb.x - x)
-    dy = abs(bomb.y - y)
+    for dy in range(-brange, brange+1):
+        if wrld.wall_at(bomb.x, bomb.y + dy): 
+            return True
     
-    if dx <= range or dy <= range:
-        return True
-    else:
-        return False
+    return False
+
     
 def is_bomb_active(wrld):
 
@@ -205,6 +238,59 @@ def num_neighboring_explosions(wrld, x, y):
             count += 1
     
     return count
+
+
+def get_char_available_actions(wrld, x, y):
+    """
+    Gets the available moves at position x, y, and us of bombs
+        Note, only checks for walls, or out of bounds
+    """ 
+
+    # check to see if a bomb exist
+
+    bomb_exist = False
+
+    try:
+        bomb = next(iter(wrld.bombs.values()))[0]
+        bomb_exist = True
+    except:
+        print("no bombs exist")
+    
+    actions = []
+
+    for dx in [-1, 0, 1]:
+        if x + dx >= 0 and x + dx < wrld.width():
+            for dy in [-1, 0, 1]:
+                if (dx != 0 or dy != 0) and y + dy >= 0 and y + dy < wrld.height():
+                    if not wrld.wall_at(x + dx, y + dy):
+
+                        # add as a possible action to place a bomb and move
+                        # regardless of the situation, we should be allowed to move without placing a bomb
+                        actions.append((dx, dy, False))
+
+                        if not bomb_exist:
+                            # give myself the option to place a bomb
+                            actions.append((dx, dy, True))
+
+    return actions
+
+def get_all_possible_actions():
+    """
+    Gets all possible actions the char can do. Doesnt IGNORE any actions.
+        Doesnt care about:
+            Out of bounds
+            Walls
+            Monsters
+            Bombs
+            Explosions
+    """
+    actions = []
+
+    for dx in [-1, 0, 1]:
+        for dy in [-1, 0, 1]:
+            for use_bomb in [True, False]:
+                actions.append((dx, dy, use_bomb))
+    return actions
 
 
 

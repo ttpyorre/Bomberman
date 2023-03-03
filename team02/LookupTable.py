@@ -37,7 +37,7 @@ class StateActionLookupTable():
         for key, q_value in self.table.items():
             (state, action) = key
             if q_value != 0:
-                print("{:<10} {:<20} {:<10}".format(state, str(action), q_value))
+                print("{:<10} {:<20} {:<10}".format(str(state), str(action), q_value))
                 
 
 
