@@ -3,11 +3,5 @@ bomb_time 1
 expl_duration 1
 expl_range 4
 +--------+
-|        |
-|        |
-|        |
-|WWWWWWWW|
-|        |
-|  WWWWWW|
-|  E     |
+|       E|
 +--------+
