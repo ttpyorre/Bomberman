@@ -10,6 +10,9 @@ class Game:
     def __init__(self, width, height, max_time, bomb_time, expl_duration, expl_range, sprite_dir="../../bomberman/sprites/"):
         self.world = RealWorld.from_params(width, height, max_time, bomb_time, expl_duration, expl_range)
         self.sprite_dir = sprite_dir
+
+        self.iteration = 0
+        self.wins = 0
         self.load_gui(width, height)
 
     @classmethod
@@ -50,6 +53,7 @@ class Game:
 
     def load_gui(self, board_width, board_height):
         pygame.init()
+        pygame.font.init()
         self.height = 24 * board_height
         self.width = 24 * board_width
         self.screen = pygame.display.set_mode((self.width, self.height))
@@ -70,11 +74,24 @@ class Game:
         self.explosion_sprite = pygame.transform.scale(self.explosion_sprite, rect)
 
     def display_gui(self):
+        font = pygame.font.SysFont("Comic Sans MS", 15)
+        iteration = font.render("Iteration: " + str(self.iteration), True, (0, 0, 0))
+        wins = font.render("# Wins: " + str(self.wins), True, (0, 0, 0))
+        weight1 = font.render("W1: " + str(round(self.world.w1, 2)), True, (0, 0, 0))
+        weight2 = font.render("W2: " + str(round(self.world.w2, 2)), True, (0, 0, 0))
+
+
         for x in range(self.world.width()):
             for y in range(self.world.height()):
                 top = self.block_height * y
                 left = self.block_width * x
                 pygame.draw.rect(self.screen, (65, 132, 15), [left, top, self.block_width, self.block_height])
+                # Print iteration #
+                self.screen.blit(iteration, (0, self.block_height * 15, self.block_width, self.block_height))
+                self.screen.blit(wins, (0, self.block_height * 16, self.block_width, self.block_height))
+                self.screen.blit(weight1, (0, self.block_height * 17, self.block_width, self.block_height))
+                self.screen.blit(weight2, (0, self.block_height * 18, self.block_width, self.block_height))
+
                 rect = (left, top, self.block_width, self.block_height)
                 if self.world.wall_at(x, y): # Walls
                     self.screen.blit(self.wall_sprite, rect)

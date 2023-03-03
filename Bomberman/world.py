@@ -30,6 +30,8 @@ class World:
         self.events = []
         # States
         self.state = 0
+        self.w1 = 1
+        self.w2 = 1
 
     @classmethod
     def from_params(cls, width, height, max_time, bomb_time, expl_duration, expl_range):
@@ -383,7 +385,7 @@ class World:
                 self.scores[e.character.name] = self.scores[e.character.name] + 50
             elif e.tpe == Event.BOMB_HIT_CHARACTER:
                 if e.character != e.other:
-                    self.scores[e.character.name] = self.scores[e.character.name] + 100
+                    self.scores[e.character.name] = self.scores[e.character.name] - 100
             elif e.tpe == Event.CHARACTER_KILLED_BY_MONSTER:
                 self.remove_character(e.character)
             elif e.tpe == Event.CHARACTER_FOUND_EXIT:

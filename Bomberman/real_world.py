@@ -20,7 +20,7 @@ class RealWorld(World):
     def add_character(self, c):
         """Adds the given character to the world"""
         self.characters[self.index(c.x,c.y)] = [c]
-        self.scores[c.name] = -self.time
+        self.scores[c.name] = self.time
 
     ###################
     # Private methods #
@@ -44,8 +44,18 @@ class RealWorld(World):
         for i, elist in entities.items():
             for e in elist:
                 # Call AI
-                state = e.do(SensedWorld.from_world(self), self.state)
-                self.state = state
+                
+                x = e.do(SensedWorld.from_world(self), self.state, self.w1, self.w2)
+                # print(x)
+                if x is not None:
+                    (state, w1, w2) = x
+                    self.state = state
+                    self.w1 = w1
+                    self.w2 = w2
+                else:
+                    self.state = self.state
+                    self.w1 = self.w1
+                    self.w2 = self.w2
 
     def manage_events(self):
         for e in self.events:

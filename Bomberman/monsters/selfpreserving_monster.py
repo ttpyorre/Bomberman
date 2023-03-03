@@ -54,7 +54,7 @@ class SelfPreservingMonster(MonsterEntity):
         # All done
         return cells
 
-    def do(self, wrld, state):
+    def do(self, wrld, state, weight1, weight2):
         """Pick an action for the monster"""
         # If a character is in the neighborhood, go to it
         (found, dx, dy) = self.look_for_character(wrld)
@@ -74,4 +74,4 @@ class SelfPreservingMonster(MonsterEntity):
                 (dx, dy) = random.choice(safe)
                 self.move(dx, dy)
         
-        return state
+        return (state, weight1, weight2)

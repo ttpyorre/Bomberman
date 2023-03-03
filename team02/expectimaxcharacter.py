@@ -18,37 +18,36 @@ class ExpectimaxCharacter(CharacterEntity):
     KEEPWAITING = 5
  
 
-    def do(self, wrld, state):
-        self.w1 = 1
-        self.w2 = 2
+    def do(self, wrld, state, weight1, weight2):
+        self.w1 = weight1
+        self.w2 = weight2
         self.alpha = 0.9
         self.decay = 0.9
-        print(state)
         match state:
             case self.BOMBING:
                 self.place_bomb()
                 self.move(0, 0)
                 # Go into Running state
-                return self.RUNNING
+                return (self.RUNNING, self.w1, self.w2)
             case self.RUNNING:
                 runs = ExpectimaxCharacter.neighbors_of_4_corners(wrld, self.x, self.y)
                 run = runs[0]
                 where = np.subtract(run, (self.x, self.y))
                 self.move(where[0], where[1])
-                return self.WAITING
+                return (self.WAITING, self.w1, self.w2)
             case self.WAITING:
                 self.move(0, 0)
-                return self.KEEPWAITING
+                return (self.KEEPWAITING, self.w1, self.w2)
             case self.KEEPWAITING:
                 self.move(0, 0)
-                return self.EXPLORING
+                return (self.EXPLORING, self.w1, self.w2)
             case self.EXPLORING:
                 pass
             case _:
                 pass
 
         if self.wall_nearby(wrld, self.x, self.y):
-            return self.BOMBING
+            return self.BOMBING, self.w1, self.w2
         char = next(iter(wrld.characters.values()))[0]
         # path = ExpectimaxCharacter.astar(char, wrld)
         # if wrld.exitcell not in path:
@@ -180,8 +179,9 @@ class ExpectimaxCharacter(CharacterEntity):
                 action = a
 
         self.move(action[0], action[1])
+        # print((self.w1, self.w2))
 
-        return self.EXPLORING
+        return (self.EXPLORING, self.w1, self.w2)
     
     def q_Learning(self, w1, w2, wrld):
         if wrld.characters.values():
